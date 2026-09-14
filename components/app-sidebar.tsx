@@ -23,6 +23,7 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
+  ShieldAlert,
 } from "lucide-react";
 import { UserRole } from "@prisma/client";
 
@@ -52,14 +53,34 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
 
-  // Règle RBAC : Un collaborateur / abonné n'a pas accès à la gestion des utilisateurs
-  const isCollaborateur = userRole === UserRole.COLLABORATEUR;
-  const navItems = NAV_ITEMS.filter((item) => {
-    if (isCollaborateur && item.href === "/utilisateurs") {
-      return false;
-    }
-    return true;
-  });
+  const isSuperAdmin =
+    (userRole as string) === "SUPER_ADMIN" ||
+    (userRole as any) === UserRole.SUPER_ADMIN ||
+    userEmail?.toLowerCase().trim() === "madacreaapp@gmail.com";
+  const isCollaborateur =
+    (userRole as string) === "COLLABORATEUR" ||
+    (userRole as any) === UserRole.COLLABORATEUR;
+
+  // Filtrage RBAC dynamique :
+  // - COLLABORATEUR : Équipe & Droits masqué
+  // - SUPER_ADMIN : Accès à tous les modules + Onglet exclusif "Console SaaS"
+  const navItems = [
+    ...NAV_ITEMS.filter((item) => {
+      if (isCollaborateur && item.href === "/utilisateurs") {
+        return false;
+      }
+      return true;
+    }),
+    ...(isSuperAdmin
+      ? [
+          {
+            label: "Console SaaS",
+            href: "/saas",
+            icon: ShieldAlert,
+          },
+        ]
+      : []),
+  ];
 
   const toggleSidebar = () => {
     setIsCollapsed((prev) => !prev);
@@ -158,7 +179,16 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
                     } ${isActive ? "text-white" : "text-brand-cream/70 group-hover:text-brand-accentLight"}`}
                   />
 
-                  {!isCollapsed && <span className="truncate">{item.label}</span>}
+                  {!isCollapsed && (
+                    <div className="flex items-center justify-between flex-1 min-w-0">
+                      <span className="truncate">{item.label}</span>
+                      {item.href === "/saas" && (
+                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-500/25 text-indigo-300 border border-indigo-500/40">
+                          Super
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </Link>
 
                 {/* Infobulle (Tooltip) visible en mode rétracté */}
@@ -258,9 +288,9 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
               </div>
             </div>
             <span className="px-2 py-0.5 rounded text-[9px] font-mono uppercase bg-brand-accent/20 text-brand-accentLight border border-brand-accent/30 font-semibold">
-              {userRole === UserRole.SUPER_ADMIN
+              {isSuperAdmin
                 ? "Super Admin"
-                : userRole === UserRole.COLLABORATEUR
+                : isCollaborateur
                 ? "Collaborateur"
                 : "Admin Rédaction"}
             </span>

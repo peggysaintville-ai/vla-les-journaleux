@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateSaaSConfigAction, simulateStatusAction } from "@/app/(saas-admin)/saas/actions";
+import { updateSaaSConfigAction, simulateStatusAction } from "@/app/(app)/saas/actions";
 import { SaaSStatus } from "@prisma/client";
 import {
   ShieldAlert,

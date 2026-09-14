@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getWebsiteContent } from "@/lib/website-content";
 import DashboardTeaserWidget from "@/components/dashboard-teaser-widget";
+import { UserRole } from "@prisma/client";
 import {
   Plus,
   Mic2,
@@ -27,6 +28,10 @@ import {
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
+  const isSuperAdmin =
+    (user?.role as string) === "SUPER_ADMIN" ||
+    (user?.role as any) === UserRole.SUPER_ADMIN ||
+    user?.email?.toLowerCase().trim() === "madacreaapp@gmail.com";
 
   // 1. Récupération de la configuration SaaS pour conditionner l'activation des modules
   let config = {
@@ -75,6 +80,19 @@ export default async function DashboardPage() {
     metrics.contactsCount = contactsCount;
   } catch (err) {
     console.warn("Utilisation des métriques locales de secours pour le dashboard :", err);
+  }
+
+  // 1b. Le SUPER_ADMIN bénéficie de tous les modules déverrouillés sans aucune restriction
+  if (isSuperAdmin) {
+    config = {
+      podcasts: true,
+      interviews: true,
+      facturation: true,
+      planning: true,
+      crm: true,
+      contrats: true,
+      analytics: true,
+    };
   }
 
   // 2. Définition des tuiles métiers conditionnées par les booléens de SaaSConfig
@@ -198,8 +216,7 @@ export default async function DashboardPage() {
     },
   ];
 
-  // 3. Verrouillage strict de la vignette SaaS : conditionnée exclusivement sur l'adresse email de session
-  const isSuperAdmin = user?.email?.toLowerCase().trim() === "madacreaapp@gmail.com";
+  // 3. Vignette Console SaaS accessible pour le SUPER_ADMIN
   if (isSuperAdmin) {
     MODULE_TILES.push({
       id: "saas-console",
@@ -330,7 +347,9 @@ export default async function DashboardPage() {
             Modules Métiers de la Rédaction
           </h2>
           <span className="text-xs text-neutral-400">
-            Activation pilotée par votre licence SaaS
+            {isSuperAdmin
+              ? "Tous les modules sont déverrouillés pour le Super Admin"
+              : "Activation pilotée par votre licence SaaS"}
           </span>
         </div>
 

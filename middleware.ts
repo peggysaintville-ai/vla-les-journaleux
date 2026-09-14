@@ -37,10 +37,10 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // 4. Protection stricte de /saas : réservé exclusivement à madacreaapp@gmail.com
+  // 4. Protection stricte de /saas : réservé exclusivement au SUPER_ADMIN ou à madacreaapp@gmail.com
   if (isSaasRoute) {
     const normalizedEmail = user.email?.toLowerCase().trim();
-    if (normalizedEmail !== "madacreaapp@gmail.com") {
+    if (user.role !== "SUPER_ADMIN" && normalizedEmail !== "madacreaapp@gmail.com") {
       // Pour tout autre utilisateur, la route est inexistante (404 pure)
       return NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 });
     }

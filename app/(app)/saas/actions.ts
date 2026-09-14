@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { SaaSStatus } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth";
+import { SaaSStatus, UserRole } from "@prisma/client";
 
 export interface SaasActionResponse {
   success: boolean;
@@ -56,6 +57,18 @@ export async function getSaaSConfigData() {
 export async function updateSaaSConfigAction(
   formData: FormData
 ): Promise<SaasActionResponse> {
+  const currentUser = await getCurrentUser();
+  if (
+    !currentUser ||
+    (currentUser.role !== UserRole.SUPER_ADMIN &&
+      currentUser.email?.toLowerCase().trim() !== "madacreaapp@gmail.com")
+  ) {
+    return {
+      success: false,
+      message: "Accès refusé. Cette action est strictement réservée au Super Admin.",
+    };
+  }
+
   const statusStr = (formData.get("status") as string) || "ACTIVE";
   const validUntilStr = formData.get("validUntil") as string;
   const podcasts = formData.get("podcasts") === "on";
@@ -130,6 +143,18 @@ export async function updateSaaSConfigAction(
 export async function simulateStatusAction(
   targetStatus: SaaSStatus
 ): Promise<SaasActionResponse> {
+  const currentUser = await getCurrentUser();
+  if (
+    !currentUser ||
+    (currentUser.role !== UserRole.SUPER_ADMIN &&
+      currentUser.email?.toLowerCase().trim() !== "madacreaapp@gmail.com")
+  ) {
+    return {
+      success: false,
+      message: "Accès refusé. Cette action est strictement réservée au Super Admin.",
+    };
+  }
+
   localDevMemoryConfig.status = targetStatus;
 
   if (targetStatus === SaaSStatus.ACTIVE) {

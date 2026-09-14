@@ -13,6 +13,9 @@ export default async function AppLayout({
   children: React.ReactNode;
 }>) {
   const user = await getCurrentUser();
+  const isSuperAdmin =
+    user?.role === "SUPER_ADMIN" ||
+    user?.email?.toLowerCase().trim() === "madacreaapp@gmail.com";
 
   // Récupération et contrôle de validité de la licence SaaS au niveau du layout serveur
   let saasStatus = "ACTIVE";
@@ -29,8 +32,8 @@ export default async function AppLayout({
         (config.validUntil && new Date(config.validUntil) < new Date());
       const isSuspended = config.status === "SUSPENDED";
 
-      // Redirection immédiate si la licence est expirée ou suspendue
-      if (isExpired || isSuspended) {
+      // Redirection immédiate si la licence est expirée ou suspendue (sauf pour le SUPER_ADMIN)
+      if ((isExpired || isSuspended) && !isSuperAdmin) {
         redirect("/abonnement-expire");
       }
 
@@ -83,7 +86,11 @@ export default async function AppLayout({
                   {user?.name || "Louise Presse"}
                 </div>
                 <div className="text-[11px] text-brand-accent font-mono font-semibold">
-                  {user?.role === "COLLABORATEUR" ? "COLLABORATEUR" : "RÉDACTRICE EN CHEF"}
+                  {isSuperAdmin
+                    ? "SUPER ADMIN"
+                    : user?.role === "COLLABORATEUR"
+                    ? "COLLABORATEUR"
+                    : "RÉDACTRICE EN CHEF"}
                 </div>
               </div>
 

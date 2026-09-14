@@ -22,9 +22,6 @@ export async function loginAction(
     return { error: "Veuillez renseigner votre email et mot de passe." };
   }
 
-  let userRole: UserRole | null = null;
-  let userEmail: string = "";
-
   try {
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase().trim() },
@@ -38,9 +35,6 @@ export async function loginAction(
     if (!isMatch) {
       return { error: "Identifiants incorrects." };
     }
-
-    userRole = user.role;
-    userEmail = user.email.toLowerCase().trim();
 
     const token = await signJWT({
       userId: user.id,
@@ -62,8 +56,6 @@ export async function loginAction(
       (normalizedEmail === "peggy.saintville@gmail.com" && password === "Peggy123!") ||
       (normalizedEmail === "louise@presse.local" && password === "Louise123!")
     ) {
-      userRole = UserRole.JOURNALISTE_ADMIN;
-      userEmail = "peggy.saintville@gmail.com";
       const token = await signJWT({
         userId: "seed-user-peggy",
         email: "peggy.saintville@gmail.com",
@@ -72,8 +64,6 @@ export async function loginAction(
       });
       await setAuthCookie(token);
     } else if (normalizedEmail === "madacreaapp@gmail.com" && (password === "spyKim@102412" || password === "Admin123!")) {
-      userRole = UserRole.SUPER_ADMIN;
-      userEmail = "madacreaapp@gmail.com";
       const token = await signJWT({
         userId: "seed-user-admin",
         email: "madacreaapp@gmail.com",
@@ -88,9 +78,6 @@ export async function loginAction(
     }
   }
 
-  if (userRole === UserRole.SUPER_ADMIN && userEmail === "madacreaapp@gmail.com") {
-    redirect("/saas");
-  } else {
-    redirect("/dashboard");
-  }
+  // Redirection directe vers le tableau de bord principal avec le menu latéral (sidebar)
+  redirect("/dashboard");
 }
