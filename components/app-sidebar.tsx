@@ -89,23 +89,25 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
   return (
     <aside
       className={`border-r border-brand-secondary bg-brand-primary text-brand-cream flex flex-col justify-between shrink-0 hidden md:flex sticky top-0 h-screen shadow-2xl transition-all duration-300 z-30 ${
-        isCollapsed ? "w-20" : "w-64"
+        isCollapsed ? "w-16" : "w-64"
       }`}
     >
       <div className="flex flex-col flex-1 min-h-0">
         {/* 1. Logo cliquable interactif pour basculer le repli/déploiement */}
-        <div className="p-4 border-b border-brand-secondary/60">
+        <div className={`border-b border-brand-secondary/60 ${isCollapsed ? "p-2.5 flex justify-center" : "p-4"}`}>
           <button
             type="button"
             onClick={toggleSidebar}
             id="sidebar-collapse-toggle-btn"
             title={isCollapsed ? "Cliquer pour déployer la barre latérale" : "Cliquer pour rétracter la barre latérale"}
-            className="w-full flex items-center justify-between group focus:outline-none rounded-xl p-1.5 hover:bg-brand-secondary/40 transition-colors"
+            className={`flex items-center group focus:outline-none rounded-xl hover:bg-brand-secondary/40 transition-colors ${
+              isCollapsed ? "justify-center p-1 w-full" : "justify-between w-full p-1.5"
+            }`}
           >
-            <div className="flex items-center gap-3 overflow-hidden">
+            <div className={`flex items-center gap-3 ${isCollapsed ? "justify-center" : "overflow-hidden"}`}>
               <div
-                className={`relative shrink-0 rounded-full overflow-hidden ring-2 ring-brand-accent/50 shadow-md shadow-brand-secondary transition-all duration-300 ${
-                  isCollapsed ? "h-8 w-8" : "h-10 w-10 group-hover:scale-105"
+                className={`relative shrink-0 rounded-xl overflow-hidden ring-2 ring-brand-accent/50 shadow-md shadow-brand-secondary transition-all duration-300 ${
+                  isCollapsed ? "h-9 w-9" : "h-10 w-10 group-hover:scale-105"
                 }`}
               >
                 <Image
@@ -113,7 +115,7 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
                   alt="V'LÀ LES JOURNALEUX"
                   fill
                   sizes="40px"
-                  className="object-cover rounded-full"
+                  className="object-contain bg-brand-secondary/90 p-0.5"
                   priority
                 />
               </div>
@@ -131,18 +133,16 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
             </div>
 
             {/* Indicateur de bascule */}
-            <div className="text-brand-cream/40 group-hover:text-brand-accent transition-colors">
-              {isCollapsed ? (
-                <ChevronRight className="w-4 h-4 mx-auto" />
-              ) : (
+            {!isCollapsed && (
+              <div className="text-brand-cream/40 group-hover:text-brand-accent transition-colors">
                 <ChevronLeft className="w-4 h-4" />
-              )}
-            </div>
+              </div>
+            )}
           </button>
         </div>
 
-        {/* 2. Liens de navigation avec défilement fluide */}
-        <nav className="p-3 space-y-1 overflow-y-auto flex-1 custom-scrollbar">
+        {/* 2. Liens de navigation avec défilement fluide sans barre de défilement apparente */}
+        <nav className={`space-y-1.5 overflow-y-auto flex-1 no-scrollbar ${isCollapsed ? "p-2" : "p-3"}`}>
           {!isCollapsed && (
             <div className="px-3 py-1.5 text-[9px] font-mono uppercase tracking-wider text-brand-cream/60 font-semibold">
               Modules Métiers
@@ -161,12 +161,14 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
                 : pathname === item.href || pathname.startsWith(item.href + "/");
 
             return (
-              <div key={item.label} className="relative group">
+              <div key={item.label} className="relative group flex justify-center">
                 <Link
                   href={item.href}
                   prefetch={true}
                   className={`flex items-center rounded-xl text-xs font-medium transition-all duration-150 ${
-                    isCollapsed ? "justify-center p-3" : "gap-3 px-3 py-2.5"
+                    isCollapsed
+                      ? "h-10 w-10 items-center justify-center p-0"
+                      : "w-full gap-3 px-3 py-2.5"
                   } ${
                     isActive
                       ? "bg-brand-accent text-white font-semibold shadow-sm shadow-brand-accent/30"
@@ -205,18 +207,18 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
       </div>
 
       {/* 3. Pied de Sidebar */}
-      <div className="p-3 border-t border-brand-secondary/60 space-y-2 shrink-0">
+      <div className={`border-t border-brand-secondary/60 space-y-2 shrink-0 ${isCollapsed ? "p-2 flex flex-col items-center" : "p-3"}`}>
         {/* Lien Site Public */}
-        <div className="relative group">
+        <div className="relative group w-full flex justify-center">
           <Link
             href="/"
             target="_blank"
             className={`flex items-center rounded-xl text-xs font-medium text-brand-cream/80 hover:text-white bg-brand-secondary/50 hover:bg-brand-secondary border border-brand-secondary transition ${
-              isCollapsed ? "justify-center p-2.5" : "justify-between px-3 py-2"
+              isCollapsed ? "h-10 w-10 items-center justify-center p-0" : "justify-between px-3 py-2 w-full"
             }`}
           >
             <span className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-brand-accentLight shrink-0" />
+              <Sparkles className="w-4 h-4 text-brand-accentLight shrink-0" />
               {!isCollapsed && <span>Voir le site</span>}
             </span>
             {!isCollapsed && <ExternalLink className="w-3 h-3 text-brand-cream/60" />}
@@ -231,7 +233,7 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
         </div>
 
         {/* Lien Paramètres tout en bas au-dessus du profil */}
-        <div className="relative group">
+        <div className="relative group w-full flex justify-center">
           {(() => {
             const isParametresActive = pathname === "/parametres" || pathname.startsWith("/parametres/");
             return (
@@ -240,7 +242,7 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
                 prefetch={true}
                 id="sidebar-settings-link"
                 className={`flex items-center rounded-xl text-xs font-semibold transition shadow-sm ${
-                  isCollapsed ? "justify-center p-2.5" : "justify-between px-3 py-2.5"
+                  isCollapsed ? "h-10 w-10 items-center justify-center p-0" : "justify-between px-3 py-2.5 w-full"
                 } ${
                   isParametresActive
                     ? "bg-brand-accent text-white shadow-brand-accent/30 font-semibold"
@@ -278,7 +280,7 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
 
         {/* Carte Profil / Utilisateur */}
         {!isCollapsed ? (
-          <div className="p-2.5 rounded-xl bg-brand-secondary/80 border border-brand-secondary flex items-center justify-between">
+          <div className="p-2.5 rounded-xl bg-brand-secondary/80 border border-brand-secondary flex items-center justify-between w-full">
             <div className="overflow-hidden">
               <div className="text-xs font-bold text-brand-cream truncate">
                 {userName || "Rédaction"}
@@ -299,7 +301,7 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
           </div>
         ) : (
           <div
-            className="flex justify-center p-2 rounded-xl bg-brand-secondary/80 border border-brand-secondary"
+            className="h-10 w-10 flex items-center justify-center rounded-xl bg-brand-secondary/80 border border-brand-secondary cursor-default"
             title={`${userName || "Rédaction"}${userEmail ? ` (${userEmail})` : ""}`}
           >
             <span className="w-6 h-6 rounded-full bg-brand-accent/30 text-brand-accentLight flex items-center justify-center text-[10px] font-bold font-mono">
