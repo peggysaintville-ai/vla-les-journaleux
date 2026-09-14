@@ -83,7 +83,7 @@ export default async function AppLayout({
             <div className="flex items-center gap-4">
               <div className="hidden sm:block text-right">
                 <div className="text-xs font-semibold text-white">
-                  {user?.name || "Louise Presse"}
+                  {user?.name || "Rédaction"}
                 </div>
                 <div className="text-[11px] text-brand-accent font-mono font-semibold">
                   {isSuperAdmin

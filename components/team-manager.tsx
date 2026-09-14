@@ -286,7 +286,7 @@ export default function TeamManager({
                         </button>
                       )}
 
-                      {user.role !== UserRole.SUPER_ADMIN && user.email !== "louise@presse.local" && (
+                      {user.role !== UserRole.SUPER_ADMIN && user.email !== "peggy.saintville@gmail.com" && (
                         <button
                           type="button"
                           onClick={() => handleDelete(user)}

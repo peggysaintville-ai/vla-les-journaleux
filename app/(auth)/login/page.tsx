@@ -2,20 +2,13 @@
 
 import { useActionState, useState } from "react";
 import { loginAction } from "./actions";
-import { Lock, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, AlertCircle, ArrowRight } from "lucide-react";
 
 import Image from "next/image";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
   const [showPassword, setShowPassword] = useState(false);
-  const [fillEmail, setFillEmail] = useState("");
-  const [fillPassword, setFillPassword] = useState("");
-
-  const handleQuickLogin = (email: string, pass: string) => {
-    setFillEmail(email);
-    setFillPassword(pass);
-  };
 
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden font-sans text-neutral-100">
@@ -75,9 +68,7 @@ export default function LoginPage() {
                   type="email"
                   required
                   autoComplete="email"
-                  value={fillEmail}
-                  onChange={(e) => setFillEmail(e.target.value)}
-                  placeholder="nom@presse.local"
+                  placeholder="votre.email@journaliste.fr"
                   className="block w-full pl-10 pr-3 py-2.5 bg-neutral-950/60 border border-neutral-800 rounded-lg text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 transition"
                 />
               </div>
@@ -100,8 +91,6 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   required
                   autoComplete="current-password"
-                  value={fillPassword}
-                  onChange={(e) => setFillPassword(e.target.value)}
                   placeholder="••••••••••••"
                   className="block w-full pl-10 pr-10 py-2.5 bg-neutral-950/60 border border-neutral-800 rounded-lg text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 transition"
                 />
@@ -137,30 +126,6 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
-
-          {/* Quick login helper for local development */}
-          <div className="mt-8 pt-6 border-t border-neutral-800/80">
-            <div className="flex items-center gap-2 text-xs font-semibold text-neutral-400 mb-3">
-              <ShieldCheck className="w-4 h-4 text-amber-400" />
-              <span>Comptes de test locaux (clic pour remplir) :</span>
-            </div>
-            <div className="grid grid-cols-1 gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  handleQuickLogin("peggy.saintville@gmail.com", "Peggy123!")
-                }
-                className="text-left p-2.5 rounded-lg bg-neutral-950/40 hover:bg-neutral-800/50 border border-neutral-800/60 transition group"
-              >
-                <div className="text-xs font-medium text-amber-300 group-hover:text-amber-200">
-                  Journaliste Admin (Peggy SAINT-VILLE)
-                </div>
-                <div className="text-[11px] text-neutral-500 font-mono">
-                  peggy.saintville@gmail.com • Peggy123!
-                </div>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

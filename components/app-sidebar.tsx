@@ -281,11 +281,13 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
           <div className="p-2.5 rounded-xl bg-brand-secondary/80 border border-brand-secondary flex items-center justify-between">
             <div className="overflow-hidden">
               <div className="text-xs font-bold text-brand-cream truncate">
-                {userName || "Journaliste"}
+                {userName || "Rédaction"}
               </div>
-              <div className="text-[10px] font-mono text-brand-cream/70 truncate">
-                {userEmail || "louise@presse.local"}
-              </div>
+              {userEmail && (
+                <div className="text-[10px] font-mono text-brand-cream/70 truncate">
+                  {userEmail}
+                </div>
+              )}
             </div>
             <span className="px-2 py-0.5 rounded text-[9px] font-mono uppercase bg-brand-accent/20 text-brand-accentLight border border-brand-accent/30 font-semibold">
               {isSuperAdmin
@@ -298,10 +300,10 @@ export default function AppSidebar({ userName, userEmail, userRole }: AppSidebar
         ) : (
           <div
             className="flex justify-center p-2 rounded-xl bg-brand-secondary/80 border border-brand-secondary"
-            title={`${userName || "Journaliste"} (${userEmail || "louise@presse.local"})`}
+            title={`${userName || "Rédaction"}${userEmail ? ` (${userEmail})` : ""}`}
           >
             <span className="w-6 h-6 rounded-full bg-brand-accent/30 text-brand-accentLight flex items-center justify-center text-[10px] font-bold font-mono">
-              {(userName || "J").charAt(0).toUpperCase()}
+              {(userName || "R").charAt(0).toUpperCase()}
             </span>
           </div>
         )}

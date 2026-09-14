@@ -619,8 +619,8 @@ export default function SettingsTabs({
                     type="email"
                     name="email"
                     required
-                    defaultValue={currentUser?.email || "louise@presse.local"}
-                    placeholder="louise@presse.local"
+                    defaultValue={currentUser?.email || ""}
+                    placeholder="votre.email@journaliste.fr"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
                   />
                   <Mail className="w-4 h-4 text-neutral-500 absolute left-3 top-3 pointer-events-none" />
