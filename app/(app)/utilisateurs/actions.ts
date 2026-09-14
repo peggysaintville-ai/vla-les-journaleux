@@ -187,3 +187,91 @@ export async function deleteCollaboratorAction(userId: string): Promise<ActionSt
 
   return { success: true, message: "Collaborateur retiré de l'équipe." };
 }
+
+/**
+ * Modifie le mot de passe d'un utilisateur selon la hiérarchie stricte RBAC :
+ * - SUPER_ADMIN : peut modifier le mot de passe de n'importe quel compte.
+ * - JOURNALISTE_ADMIN : peut modifier le mot de passe des collaborateurs/abonnés et le sien,
+ *   mais JAMAIS celui d'un SUPER_ADMIN (renvoie une erreur 403 stricte).
+ * - COLLABORATEUR : accès interdit à cette action (403).
+ * Le nouveau mot de passe est obligatoirement haché avec bcrypt avant d'être sauvegardé.
+ */
+export async function changeUserPasswordAction(
+  userId: string,
+  newPassword: string
+): Promise<ActionState> {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    return { error: "Session non authentifiée (401)." };
+  }
+
+  // Seuls SUPER_ADMIN et JOURNALISTE_ADMIN ont accès à la gestion des mots de passe d'équipe
+  if (
+    currentUser.role !== UserRole.SUPER_ADMIN &&
+    currentUser.role !== UserRole.JOURNALISTE_ADMIN
+  ) {
+    return {
+      error: "Accès refusé (403) : Vous n'avez pas les droits nécessaires pour modifier ce mot de passe.",
+    };
+  }
+
+  const trimmedPassword = newPassword?.trim();
+  if (!trimmedPassword || trimmedPassword.length < 6) {
+    return {
+      error: "Le nouveau mot de passe doit comporter au moins 6 caractères.",
+    };
+  }
+
+  try {
+    // Récupération de l'utilisateur ciblé
+    const target = await db.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (!target) {
+      return { error: "Utilisateur introuvable." };
+    }
+
+    // Règle de sécurité stricte RBAC :
+    // Un ADMIN ne peut JAMAIS modifier un compte SUPER_ADMIN ou l'adresse réservée
+    const isTargetSuperAdmin =
+      target.role === UserRole.SUPER_ADMIN ||
+      target.email.toLowerCase().trim() === "madacreaapp@gmail.com";
+
+    if (isTargetSuperAdmin && currentUser.role !== UserRole.SUPER_ADMIN) {
+      return {
+        error: "Accès refusé (403) : Seul un Super Admin peut modifier le mot de passe d'un compte Super Admin.",
+      };
+    }
+
+    // Hachage cryptographique sécurisé (bcrypt, 10 rounds)
+    const passwordHash = await bcrypt.hash(trimmedPassword, 10);
+
+    // Sauvegarde en base PostgreSQL Neon
+    await db.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+
+    revalidatePath("/utilisateurs");
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      message: `Le mot de passe de ${target.name} a été mis à jour avec succès.`,
+    };
+  } catch (err) {
+    console.error("Erreur lors de la modification du mot de passe :", err);
+    return {
+      error: "Une erreur est survenue lors de la mise à jour du mot de passe.",
+    };
+  }
+}
+

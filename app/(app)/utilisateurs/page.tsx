@@ -19,13 +19,18 @@ export default async function TeamUsersPage() {
     redirect("/dashboard");
   }
 
-  // Récupération stricte des comptes de l'équipe :
-  // Le compte madacreaapp@gmail.com et les comptes SUPER_ADMIN sont mathématiquement exclus
-  const collaborators = await getCollaborators();
+  // Récupération stricte selon la hiérarchie RBAC :
+  // - SUPER_ADMIN : voit tous les comptes (Super Admin, Admins, Collaborateurs)
+  // - JOURNALISTE_ADMIN : les comptes SUPER_ADMIN sont mathématiquement exclus dès la requête Prisma
+  const collaborators = await getCollaborators({}, user.role);
 
   return (
     <div className="space-y-6">
-      <TeamManager collaborators={collaborators} />
+      <TeamManager
+        collaborators={collaborators}
+        currentUserRole={user.role}
+        currentUserId={user.userId}
+      />
     </div>
   );
 }

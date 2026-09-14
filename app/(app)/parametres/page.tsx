@@ -6,16 +6,20 @@ import { db } from "@/lib/db";
 import SettingsTabs from "@/components/settings-tabs";
 import { Settings, ShieldCheck } from "lucide-react";
 
+import { UserRole } from "@prisma/client";
+
 export const metadata: Metadata = {
   title: "Paramètres & Facturation | V'LÀ LES JOURNALEUX",
   description: "Configuration de l'identité éditoriale, mentions légales, coordonnées bancaires et équipe.",
 };
 
 export default async function ParametresPage() {
-  const [currentUser, companySettings, collaborators] = await Promise.all([
-    getCurrentUser(),
+  const currentUser = await getCurrentUser();
+  const isCollaborateur = currentUser?.role === UserRole.COLLABORATEUR;
+
+  const [companySettings, collaborators] = await Promise.all([
     getCompanySettings(),
-    getCollaborators(),
+    isCollaborateur ? Promise.resolve([]) : getCollaborators({}, currentUser?.role),
   ]);
 
   // Récupération de l'avatar en base de données si possible

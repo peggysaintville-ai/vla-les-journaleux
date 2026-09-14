@@ -54,7 +54,7 @@ export default async function AppLayout({
     <AudioPlayerProvider>
       <div className="min-h-screen bg-neutral-950 text-neutral-100 flex font-sans antialiased">
         {/* 1. BARRE LATÉRALE RÉTRACTABLE (SIDEBAR) */}
-        <AppSidebar userName={user?.name} userEmail={user?.email} />
+        <AppSidebar userName={user?.name} userEmail={user?.email} userRole={user?.role} />
 
         {/* 2. ZONE PRINCIPALE DE CONTENU */}
         <div className="flex-1 flex flex-col min-w-0">

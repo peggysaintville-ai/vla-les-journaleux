@@ -120,7 +120,7 @@ export async function updateUserProfileAction(
         name: string;
         email: string;
         avatar?: string | null;
-        password?: string;
+        passwordHash?: string;
       } = {
         name,
         email,
@@ -128,7 +128,7 @@ export async function updateUserProfileAction(
       };
 
       if (hashedPassword) {
-        updateData.password = hashedPassword;
+        updateData.passwordHash = hashedPassword;
       }
 
       await db.user.update({

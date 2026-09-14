@@ -24,10 +24,12 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { UserRole } from "@prisma/client";
 
 interface AppSidebarProps {
   userName?: string;
   userEmail?: string;
+  userRole?: UserRole | string;
 }
 
 const NAV_ITEMS = [
@@ -46,9 +48,18 @@ const NAV_ITEMS = [
   { label: "Équipe & Droits", href: "/utilisateurs", icon: UserCheck },
 ];
 
-export default function AppSidebar({ userName, userEmail }: AppSidebarProps) {
+export default function AppSidebar({ userName, userEmail, userRole }: AppSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+
+  // Règle RBAC : Un collaborateur / abonné n'a pas accès à la gestion des utilisateurs
+  const isCollaborateur = userRole === UserRole.COLLABORATEUR;
+  const navItems = NAV_ITEMS.filter((item) => {
+    if (isCollaborateur && item.href === "/utilisateurs") {
+      return false;
+    }
+    return true;
+  });
 
   const toggleSidebar = () => {
     setIsCollapsed((prev) => !prev);
@@ -117,7 +128,7 @@ export default function AppSidebar({ userName, userEmail }: AppSidebarProps) {
             </div>
           )}
 
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
               pathname === "/contrats/signature-rapide"
@@ -247,7 +258,11 @@ export default function AppSidebar({ userName, userEmail }: AppSidebarProps) {
               </div>
             </div>
             <span className="px-2 py-0.5 rounded text-[9px] font-mono uppercase bg-brand-accent/20 text-brand-accentLight border border-brand-accent/30 font-semibold">
-              Rédaction
+              {userRole === UserRole.SUPER_ADMIN
+                ? "Super Admin"
+                : userRole === UserRole.COLLABORATEUR
+                ? "Collaborateur"
+                : "Admin Rédaction"}
             </span>
           </div>
         ) : (

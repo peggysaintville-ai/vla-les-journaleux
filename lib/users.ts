@@ -69,21 +69,33 @@ export const localDevCollaborators: CollaboratorItem[] = [
 ];
 
 /**
- * Récupère les collaborateurs / utilisateurs de l'espace journalistique
- * en excluant STRICTEMENT tout compte SUPER_ADMIN et l'adresse madacreaapp@gmail.com.
+ * Récupère les collaborateurs / utilisateurs selon la hiérarchie RBAC :
+ * - SUPER_ADMIN : voit tous les utilisateurs (Super Admin, Admin, Collaborateurs).
+ * - Tout autre rôle : les comptes SUPER_ADMIN et l'adresse madacreaapp@gmail.com sont STRICTEMENT exclus dès la requête en base.
+ * Aucun mot de passe n'est jamais sélectionné ni renvoyé.
  */
-export async function getCollaborators(where: Prisma.UserWhereInput = {}): Promise<CollaboratorItem[]> {
+export async function getCollaborators(
+  where: Prisma.UserWhereInput = {},
+  viewerRole?: UserRole
+): Promise<CollaboratorItem[]> {
   try {
+    const isSuperAdmin = viewerRole === UserRole.SUPER_ADMIN;
+    const filter: Prisma.UserWhereInput = {
+      ...where,
+      ...(isSuperAdmin
+        ? {}
+        : {
+            role: {
+              not: UserRole.SUPER_ADMIN,
+            },
+            email: {
+              not: "madacreaapp@gmail.com",
+            },
+          }),
+    };
+
     const users = await db.user.findMany({
-      where: {
-        ...where,
-        role: {
-          not: UserRole.SUPER_ADMIN,
-        },
-        email: {
-          not: "madacreaapp@gmail.com",
-        },
-      },
+      where: filter,
       select: {
         id: true,
         email: true,

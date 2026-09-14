@@ -31,6 +31,8 @@ import {
   Info,
 } from "lucide-react";
 
+import { UserRole } from "@prisma/client";
+
 interface SettingsTabsProps {
   initialCompanySettings: CompanySettingsData;
   collaborators: CollaboratorItem[];
@@ -44,7 +46,10 @@ export default function SettingsTabs({
   currentUser,
   userAvatar,
 }: SettingsTabsProps) {
-  const [activeTab, setActiveTab] = useState<"company" | "team" | "profile">("company");
+  const isCollab = currentUser?.role === UserRole.COLLABORATEUR;
+  const [activeTab, setActiveTab] = useState<"company" | "team" | "profile">(
+    isCollab ? "profile" : "company"
+  );
 
   // Server action state pour l'onglet Identité & Facturation
   const [companyState, companyAction, isCompanySaving] = useActionState(
@@ -73,50 +78,54 @@ export default function SettingsTabs({
       {/* 1. NAVIGATION HORIZONTALE PAR ONGLETS */}
       <div className="border-b border-neutral-800 pb-2">
         <nav className="flex space-x-2 sm:space-x-4" aria-label="Tabs">
-          <button
-            type="button"
-            id="tab-btn-company"
-            onClick={() => setActiveTab("company")}
-            className={`flex items-center gap-2.5 px-4 py-3 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 ${
-              activeTab === "company"
-                ? "bg-brand-primary text-brand-cream border border-brand-accent shadow-md shadow-brand-secondary/50"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-900 border border-transparent"
-            }`}
-          >
-            <Building2
-              className={`w-4 h-4 ${
-                activeTab === "company" ? "text-brand-accent" : "text-neutral-400"
-              }`}
-            />
-            <span>Identité & Facturation</span>
-          </button>
-
-          <button
-            type="button"
-            id="tab-btn-team"
-            onClick={() => setActiveTab("team")}
-            className={`flex items-center gap-2.5 px-4 py-3 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 ${
-              activeTab === "team"
-                ? "bg-brand-primary text-brand-cream border border-brand-accent shadow-md shadow-brand-secondary/50"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-900 border border-transparent"
-            }`}
-          >
-            <Users
-              className={`w-4 h-4 ${
-                activeTab === "team" ? "text-brand-accent" : "text-neutral-400"
-              }`}
-            />
-            <span>Équipe & Accès</span>
-            <span
-              className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-mono ${
-                activeTab === "team"
-                  ? "bg-brand-accent text-white"
-                  : "bg-neutral-800 text-neutral-400"
+          {!isCollab && (
+            <button
+              type="button"
+              id="tab-btn-company"
+              onClick={() => setActiveTab("company")}
+              className={`flex items-center gap-2.5 px-4 py-3 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 ${
+                activeTab === "company"
+                  ? "bg-brand-primary text-brand-cream border border-brand-accent shadow-md shadow-brand-secondary/50"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-900 border border-transparent"
               }`}
             >
-              {collaborators.length}
-            </span>
-          </button>
+              <Building2
+                className={`w-4 h-4 ${
+                  activeTab === "company" ? "text-brand-accent" : "text-neutral-400"
+                }`}
+              />
+              <span>Identité & Facturation</span>
+            </button>
+          )}
+
+          {!isCollab && (
+            <button
+              type="button"
+              id="tab-btn-team"
+              onClick={() => setActiveTab("team")}
+              className={`flex items-center gap-2.5 px-4 py-3 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 ${
+                activeTab === "team"
+                  ? "bg-brand-primary text-brand-cream border border-brand-accent shadow-md shadow-brand-secondary/50"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-900 border border-transparent"
+              }`}
+            >
+              <Users
+                className={`w-4 h-4 ${
+                  activeTab === "team" ? "text-brand-accent" : "text-neutral-400"
+                }`}
+              />
+              <span>Équipe & Accès</span>
+              <span
+                className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === "team"
+                    ? "bg-brand-accent text-white"
+                    : "bg-neutral-800 text-neutral-400"
+                }`}
+              >
+                {collaborators.length}
+              </span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -139,7 +148,7 @@ export default function SettingsTabs({
       </div>
 
       {/* 2. CONTENU DU TAB 1 : IDENTITÉ & FACTURATION */}
-      {activeTab === "company" && (
+      {!isCollab && activeTab === "company" && (
         <form action={companyAction} className="space-y-6">
           {/* Feedback Toast / Alert */}
           {companyState?.success && (
@@ -480,7 +489,7 @@ export default function SettingsTabs({
       )}
 
       {/* 3. CONTENU DU TAB 2 : ÉQUIPE & ACCÈS */}
-      {activeTab === "team" && (
+      {!isCollab && activeTab === "team" && (
         <div className="space-y-6">
           <div className="p-4 rounded-2xl bg-brand-primary/40 border border-brand-accent/30 flex items-start gap-3">
             <Shield className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
@@ -493,7 +502,11 @@ export default function SettingsTabs({
           </div>
 
           {/* Intégration du composant TeamManager existant */}
-          <TeamManager collaborators={collaborators} />
+          <TeamManager
+            collaborators={collaborators}
+            currentUserRole={currentUser?.role}
+            currentUserId={currentUser?.userId}
+          />
         </div>
       )}
 

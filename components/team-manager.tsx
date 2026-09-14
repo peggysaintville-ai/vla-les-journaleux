@@ -5,6 +5,7 @@ import {
   createCollaboratorAction,
   updatePermissionsAction,
   deleteCollaboratorAction,
+  changeUserPasswordAction,
 } from "@/app/(app)/utilisateurs/actions";
 import { CollaboratorItem, UserPermissions } from "@/lib/users";
 import { UserRole } from "@prisma/client";
@@ -26,10 +27,15 @@ import {
   FileCheck2,
   BarChart3,
   Key,
+  Eye,
+  EyeOff,
+  Lock,
 } from "lucide-react";
 
 interface TeamManagerProps {
   collaborators: CollaboratorItem[];
+  currentUserRole?: UserRole;
+  currentUserId?: string;
 }
 
 const MODULE_LIST: { key: keyof UserPermissions; label: string; icon: React.ElementType }[] = [
@@ -42,11 +48,47 @@ const MODULE_LIST: { key: keyof UserPermissions; label: string; icon: React.Elem
   { key: "analytics", label: "Analytics", icon: BarChart3 },
 ];
 
-export default function TeamManager({ collaborators }: TeamManagerProps) {
+export default function TeamManager({
+  collaborators,
+  currentUserRole,
+  currentUserId,
+}: TeamManagerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<CollaboratorItem | null>(null);
+  const [passwordUser, setPasswordUser] = useState<CollaboratorItem | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Modification du mot de passe utilisateur
+  const handleSavePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordUser) return;
+    if (newPassword.trim().length < 6) {
+      setPasswordError("Le mot de passe doit comporter au moins 6 caractères.");
+      return;
+    }
+
+    setIsSavingPassword(true);
+    setPasswordError(null);
+    try {
+      const res = await changeUserPasswordAction(passwordUser.id, newPassword);
+      if (res.success) {
+        setToast({ type: "success", text: res.message || "Mot de passe mis à jour avec succès." });
+        setPasswordUser(null);
+        setNewPassword("");
+      } else {
+        setPasswordError(res.error || "Une erreur est survenue.");
+      }
+    } catch {
+      setPasswordError("Erreur lors de la communication avec le serveur.");
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
 
   // Formulaire d'invitation avec useActionState
   const [formState, formAction, isSubmitting] = useActionState(async (prev: unknown, fd: FormData) => {
@@ -150,7 +192,14 @@ export default function TeamManager({ collaborators }: TeamManagerProps) {
                         {user.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-bold text-white text-sm">{user.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-white text-sm">{user.name}</span>
+                          {currentUserId && user.id === currentUserId && (
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
+                              Vous
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[11px] text-neutral-400 font-mono flex items-center gap-1">
                           <Mail className="w-3 h-3 text-neutral-400" />
                           <span>{user.email}</span>
@@ -161,7 +210,12 @@ export default function TeamManager({ collaborators }: TeamManagerProps) {
 
                   {/* Rôle */}
                   <td className="px-6 py-4">
-                    {user.role === UserRole.JOURNALISTE_ADMIN ? (
+                    {user.role === UserRole.SUPER_ADMIN ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 text-[10px] font-mono font-bold">
+                        <Shield className="w-3 h-3 text-purple-400" />
+                        <span>Super Admin</span>
+                      </span>
+                    ) : user.role === UserRole.JOURNALISTE_ADMIN ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 text-[10px] font-mono font-bold">
                         <Shield className="w-3 h-3" />
                         <span>Journaliste Admin</span>
@@ -203,16 +257,36 @@ export default function TeamManager({ collaborators }: TeamManagerProps) {
                   {/* Actions */}
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditingUser(user)}
-                        className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition"
-                        title="Détail des permissions"
-                      >
-                        <Sliders className="w-3.5 h-3.5" />
-                      </button>
+                      {/* Bouton Changer Mot de passe (RBAC : un Admin ne peut pas modifier un Super Admin) */}
+                      {!(user.role === UserRole.SUPER_ADMIN && currentUserRole !== UserRole.SUPER_ADMIN) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPasswordUser(user);
+                            setNewPassword("");
+                            setPasswordError(null);
+                            setShowPassword(false);
+                          }}
+                          className="p-1.5 rounded-lg bg-neutral-800 hover:bg-amber-500/20 text-neutral-400 hover:text-amber-400 transition"
+                          title="Modifier le mot de passe"
+                        >
+                          <Key className="w-3.5 h-3.5" />
+                        </button>
+                      )}
 
-                      {user.email !== "louise@presse.local" && (
+                      {/* Bouton Permissions (masqué sur Super Admin) */}
+                      {user.role !== UserRole.SUPER_ADMIN && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingUser(user)}
+                          className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition"
+                          title="Détail des permissions"
+                        >
+                          <Sliders className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+
+                      {user.role !== UserRole.SUPER_ADMIN && user.email !== "louise@presse.local" && (
                         <button
                           type="button"
                           onClick={() => handleDelete(user)}
@@ -440,6 +514,107 @@ export default function TeamManager({ collaborators }: TeamManagerProps) {
                 Fermer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. MODAL DE MODIFICATION DU MOT DE PASSE */}
+      {passwordUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-400/10 text-amber-400 flex items-center justify-center">
+                  <Key className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Modifier le mot de passe</h3>
+                  <p className="text-xs text-neutral-400">
+                    Pour <strong className="text-neutral-200">{passwordUser.name}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPasswordUser(null)}
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80 flex items-center justify-between text-xs">
+              <div className="text-neutral-400 font-mono truncate">{passwordUser.email}</div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">
+                {passwordUser.role === UserRole.SUPER_ADMIN
+                  ? "Super Admin"
+                  : passwordUser.role === UserRole.JOURNALISTE_ADMIN
+                  ? "Admin"
+                  : "Collaborateur"}
+              </span>
+            </div>
+
+            {passwordError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-xs text-rose-300">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSavePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-1.5">
+                  Nouveau mot de passe *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Minimum 6 caractères"
+                    autoComplete="new-password"
+                    className="w-full pl-9 pr-10 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 transition font-mono"
+                  />
+                  <Lock className="w-4 h-4 text-neutral-500 absolute left-3 top-3 pointer-events-none" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-neutral-400 hover:text-white transition"
+                    title={showPassword ? "Masquer" : "Afficher"}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[11px] text-neutral-500 mt-1.5">
+                  Le mot de passe sera haché de manière sécurisée (bcrypt) avant d&apos;être stocké en base.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-neutral-800 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPasswordUser(null)}
+                  className="px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold transition"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingPassword}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-accent hover:bg-brand-accentLight text-white text-xs font-bold shadow-lg shadow-brand-accent/20 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isSavingPassword ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Key className="w-4 h-4" />
+                      <span>Enregistrer</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
