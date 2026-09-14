@@ -1,0 +1,354 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum SaaSStatus {
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  JOURNALISTE_ADMIN
+  COLLABORATEUR
+}
+
+enum ContactType {
+  CLIENT_B2B
+  INVITE
+  ATTACHE_PRESSE
+  DIFFUSEUR
+  PARTENAIRE
+}
+
+enum PipelineStatus {
+  IDEE
+  ECRITURE
+  ENREGISTRE
+  MONTAGE
+  VALIDATION
+  PUBLIE
+}
+
+enum InterviewStatus {
+  PREPARATION
+  PLANIFIE
+  TOURNE
+  DERUSHE
+  LIVRE
+  ARCHIVE
+}
+
+enum DocumentType {
+  DEVIS
+  FACTURE
+}
+
+enum DocumentStatus {
+  BROUILLON
+  ENVOYE
+  PAYE
+  REFUSE
+  ANNULE
+}
+
+enum ContractType {
+  DROIT_IMAGE
+  CESSION_DROITS
+  PRESTATION
+  CONFIDENTIALITE
+}
+
+enum ContractStatus {
+  BROUILLON
+  EN_ATTENTE_SIGNATURE
+  SIGNE
+  EXPIRE
+  RESILIE
+}
+
+enum PitchStatus {
+  IDEE
+  ENVOYE
+  VALIDE
+  REFUSE
+}
+
+enum BillingType {
+  PRESTATION_B2B
+  DROITS_AUTEUR
+  PIGE
+}
+
+model SaaSConfig {
+  id          String     @id @default(cuid())
+  clientKey   String     @unique
+  status      SaaSStatus @default(ACTIVE)
+  validUntil  DateTime
+  podcasts    Boolean    @default(true)
+  interviews  Boolean    @default(true)
+  facturation Boolean    @default(true)
+  planning    Boolean    @default(true)
+  crm         Boolean    @default(true)
+  contrats    Boolean    @default(true)
+  analytics   Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  passwordHash String
+  name         String
+  role         UserRole        @default(JOURNALISTE_ADMIN)
+  permissions  Json?           // Droits d'accès granulaires par module : { podcasts: boolean, ... }
+  avatar       String?         // URL ou identifiant d'avatar
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  interviews   Interview[]     @relation("AssignedInterviews")
+  events       CalendarEvent[]
+  episodes     Episode[]       @relation("CreatedEpisodes")
+}
+
+model Contact {
+  id          String         @id @default(cuid())
+  type        ContactType    @default(INVITE)
+  nom         String
+  email       String?
+  telephone   String?
+  entreprise  String?
+  siren       String?        // requis pour les structures B2B
+  notes       String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  interviews  Interview[]
+  invoices    InvoiceQuote[]
+  contracts   Contract[]
+}
+
+model Podcast {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  coverImage  String?
+  rssFeedUrl  String?
+  spotifyUrl    String?
+  appleUrl      String?
+  videoUrl      String?
+  audioEmbedUrl String?
+  isPublic      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  episodes      Episode[]
+}
+
+model Episode {
+  id                   String         @id @default(cuid())
+  podcastId            String
+  podcast              Podcast        @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  title                String
+  description          String?
+  episodeNumber        Int?
+  season               Int?           @default(1)
+  pipelineStatus       PipelineStatus @default(IDEE)
+  audioUrl             String?
+  audioStreamUrl       String?
+  duration             Int?           // durée en secondes
+  recordDate           DateTime?
+  scheduledReleaseDate DateTime?
+  showNotes            String?
+  transcript           String?
+  isVitrine            Boolean        @default(false)
+  authorId             String?
+  author               User?          @relation("CreatedEpisodes", fields: [authorId], references: [id], onDelete: SetNull)
+  publishedAt          DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+}
+
+model Interview {
+  id           String          @id @default(cuid())
+  title        String
+  status       InterviewStatus @default(PREPARATION)
+  shootingDate DateTime?
+  location     String?
+  notes        String?
+  deliverables String?
+  audioUrl     String?
+  transcript   String?
+  rundown      Json?           // Séquences du conducteur : bloc, durée estimée, statut, notes, speaker
+  questions    Json?           // Questions ordonnables : [{ id, text, order, answered }]
+  quotes       Json?           // Citations extraites : [{ id, text, speaker, timestamp }]
+  contactId    String?
+  contact      Contact?        @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  assigneeId   String?
+  assignee     User?           @relation("AssignedInterviews", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model CalendarEvent {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  allDay      Boolean   @default(false)
+  eventType   String?   // ex: TOURNAGE, ENREGISTREMENT, INTERVIEW, RDV_CLIENT
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ServiceCatalog {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  unitPrice   Decimal
+  taxRate     Decimal  @default(20.00)
+  unit        String   @default("forfait") // jour, episode, heure, forfait
+  isPublic    Boolean  @default(true)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model InvoiceQuote {
+  id             String         @id @default(cuid())
+  type           DocumentType   @default(DEVIS)
+  number         String         @unique
+  status         DocumentStatus @default(BROUILLON)
+  billingType    BillingType    @default(PRESTATION_B2B)
+  operationType  String         @default("PRESTATION_SERVICES") // "PRESTATION_SERVICES" | "LIVRAISON_BIENS" | "DROITS_AUTEUR"
+  eInvoiceStatus String         @default("NON_TRANSMISE")       // "NON_TRANSMISE" | "DEPOSEE" | "REJETEE" | "ENCAISSEE"
+  facturxXmlUrl  String?
+  issueDate      DateTime       @default(now())
+  dueDate        DateTime?
+  totalAmount    Decimal
+  items          Json           // Liste des prestations et lignes de facture
+  notes          String?
+  contactId      String?
+  contact        Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Contract {
+  id         String         @id @default(cuid())
+  title      String
+  type       ContractType   @default(DROIT_IMAGE)
+  status     ContractStatus @default(BROUILLON)
+  fileUrl    String?
+  signedAt   DateTime?
+  expiresAt  DateTime?
+  notes      String?
+  contactId  String?
+  contact    Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model Article {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String?
+  content     String
+  coverImage  String?
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Pitch {
+  id          String      @id @default(cuid())
+  subject     String
+  angle       String
+  mediaTarget String
+  status      PitchStatus @default(IDEE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model CompanySettings {
+  id                 String   @id @default(cuid())
+  legalName          String   @default("V'LÀ LES JOURNALEUX SAS")
+  tradeName          String?  @default("V'LÀ LES JOURNALEUX")
+  siret              String?  @default("892 419 823 00018")
+  vatNumber          String?  @default("FR 42 892419823")
+  apeCode            String?  @default("9003B")
+  address            String?  @default("14 bis rue des Débats et Enquêtes")
+  postalCode         String?  @default("75011")
+  city               String?  @default("Paris")
+  country            String?  @default("France")
+  email              String?  @default("redaction@vlalesjournaleux.fr")
+  phone              String?  @default("+33 1 42 68 00 00")
+  websiteUrl         String?  @default("https://vlalesjournaleux.fr")
+  iban               String?  @default("FR76 3000 4012 3456 7890 1234 567")
+  bic                String?  @default("BNPAFRPPXXX")
+  bankName           String?  @default("Banque Postale & Média")
+  legalNoticeInvoice String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model WebsiteContent {
+  id                String    @id @default(cuid())
+  heroTitle         String    @default("Journalisme d'investigation, podcasts et récits engagés.")
+  heroSubtitle      String    @default("De l'enquête au grand reportage, je raconte les récits qui dérangent et éclairent.")
+  bioText           String
+  contactEmail      String    @default("contact@vlalesjournaleux.fr")
+  socialSpotify     String?
+  socialApple       String?
+  socialYoutube     String?
+  socialTwitter     String?
+  socialLinkedin    String?
+  socialInstagram   String?
+  featuredPodcastId String?
+  teaserEnabled     Boolean   @default(false)
+  teaserBadge       String?   @default("Bientôt disponible")
+  teaserTitle       String?
+  teaserHook        String?
+  teaserLinkUrl     String?
+  teaserLinkLabel   String?   @default("Voir l'annonce officielle")
+  teaserReleaseDate DateTime?
+  videoUrl          String?
+  audioEmbedUrl     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model VitrineSettings {
+  id                   String   @id @default(cuid())
+  showTeaserBanner     Boolean  @default(true)
+  teaserTitle          String?
+  teaserSubtitle       String?
+  teaserAudioUrl       String?
+  teaserExternalLink   String?
+  videoUrl             String?
+  audioEmbedUrl        String?
+  showAudioBackground  Boolean  @default(false)
+  audioBackgroundUrl   String?
+  audioBackgroundTitle String?
+  showPodcastsSection  Boolean  @default(true)
+  showArticlesSection  Boolean  @default(true)
+  showBioSection       Boolean  @default(true)
+  showContactSection   Boolean  @default(true)
+  bioTitle             String?  @default("L'indépendance comme boussole, l'humain comme centre.")
+  bioText              String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+
