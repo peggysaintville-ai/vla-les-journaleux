@@ -25,6 +25,8 @@ import {
   Upload,
   RotateCcw,
   BadgeCheck,
+  ZoomIn,
+  MoveVertical,
 } from "lucide-react";
 
 interface WebsiteContentFormProps {
@@ -76,6 +78,25 @@ export default function WebsiteContentForm({
     settings.heroCaption || "En direct de la rédaction centrale"
   );
 
+  // Cadrage & Positionnement de la photo
+  const initialPosition = settings.heroPhotoPosition || "center center";
+  const [heroPhotoPosition, setHeroPhotoPosition] = useState(initialPosition);
+  
+  // Extraction du pourcentage vertical si format "center X%"
+  const getInitialVerticalPercent = (pos: string) => {
+    const match = pos.match(/center\s+(\d+)%/);
+    if (match) return parseInt(match[1], 10);
+    if (pos.includes("top")) return 15;
+    if (pos.includes("bottom")) return 85;
+    return 50;
+  };
+  const [verticalPercent, setVerticalPercent] = useState<number>(
+    getInitialVerticalPercent(initialPosition)
+  );
+  const [photoZoom, setPhotoZoom] = useState<number>(1);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [photoStatusMessage, setPhotoStatusMessage] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Autres états d'aperçu
@@ -90,25 +111,96 @@ export default function WebsiteContentForm({
   const [showBio, setShowBio] = useState(settings.showBioSection);
   const [showContact, setShowContact] = useState(settings.showContactSection);
 
+  // Traitement et compression côté client de l'image sélectionnée
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setPhotoPreview(previewUrl);
-    }
+    if (!file) return;
+
+    setIsProcessingImage(true);
+    setPhotoStatusMessage("Optimisation et compression de l'image...");
+
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      const img = new window.Image();
+      img.onload = () => {
+        // Redimensionnement haute définition mais optimisé (max 1200px)
+        const maxDim = 1200;
+        let w = img.width;
+        let h = img.height;
+
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          // Export JPEG compressé de haute qualité (88%)
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.88);
+          setHeroPhotoUrl(compressedDataUrl);
+          setPhotoPreview(compressedDataUrl);
+
+          const sizeKb = Math.round((compressedDataUrl.length * 0.75) / 1024);
+          setPhotoStatusMessage(`Photo "${file.name}" prête (${sizeKb} Ko)`);
+        }
+        setIsProcessingImage(false);
+      };
+      img.onerror = () => {
+        setIsProcessingImage(false);
+        setPhotoStatusMessage("Erreur lors de la lecture de l'image.");
+      };
+      img.src = readerEvent.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleResetPhoto = () => {
     setHeroPhotoUrl("/images/journalist-portrait.jpg");
     setPhotoPreview("/images/journalist-portrait.jpg");
+    setHeroPhotoPosition("center center");
+    setVerticalPercent(50);
+    setPhotoZoom(1);
+    setPhotoStatusMessage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
+  const applyPositionPreset = (type: "top" | "center" | "bottom") => {
+    if (type === "top") {
+      setHeroPhotoPosition("center 15%");
+      setVerticalPercent(15);
+    } else if (type === "center") {
+      setHeroPhotoPosition("center 50%");
+      setVerticalPercent(50);
+    } else if (type === "bottom") {
+      setHeroPhotoPosition("center 85%");
+      setVerticalPercent(85);
+    }
+  };
+
+  const handleVerticalSliderChange = (val: number) => {
+    setVerticalPercent(val);
+    setHeroPhotoPosition(`center ${val}%`);
+  };
+
   return (
     <form action={formAction} className="space-y-8 pb-16">
-      {/* Toast Feedback */}
+      {/* Inputs cachés garantissant la persistance de l'image et du cadrage */}
+      <input type="hidden" name="heroPhotoUrl" value={heroPhotoUrl} />
+      <input type="hidden" name="heroPhotoPosition" value={heroPhotoPosition} />
+
+      {/* Toast Feedback Supérieur */}
       {state?.success && (
         <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-3 text-emerald-300 text-xs font-semibold shadow-lg animate-in fade-in">
           <div className="flex items-center gap-2">
@@ -119,7 +211,7 @@ export default function WebsiteContentForm({
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 transition"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 transition"
           >
             <span>Voir le site en direct</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -149,7 +241,7 @@ export default function WebsiteContentForm({
                 </span>
               </h2>
               <p className="text-xs text-neutral-300">
-                Personnalisez le nom officiel, le portrait, le titre principal H1, le statut d&apos;activité et la légende sans toucher au code.
+                Personnalisez le nom officiel, le portrait, le cadrage, le titre H1 et le statut d&apos;activité sans toucher au code.
               </p>
             </div>
           </div>
@@ -162,8 +254,8 @@ export default function WebsiteContentForm({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Formulaire de l'identité */}
-          <div className="lg:col-span-8 space-y-5">
+          {/* Formulaire des textes */}
+          <div className="lg:col-span-7 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Nom complet du journaliste */}
               <div>
@@ -183,7 +275,7 @@ export default function WebsiteContentForm({
                   <BadgeCheck className="w-4 h-4 text-brand-accentLight absolute right-3 top-3 pointer-events-none" />
                 </div>
                 <p className="text-[11px] text-neutral-400 mt-1">
-                  Apparaît dans le header, le footer, les mentions légales et les badges.
+                  Header, footer, signatures d&apos;articles et badges.
                 </p>
               </div>
 
@@ -202,7 +294,7 @@ export default function WebsiteContentForm({
                   className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs sm:text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
                 />
                 <p className="text-[11px] text-neutral-400 mt-1">
-                  Accroche immédiate sous le nom de marque et dans le chapeau.
+                  Accroche sous le titre principal.
                 </p>
               </div>
             </div>
@@ -236,12 +328,9 @@ export default function WebsiteContentForm({
                 placeholder="Diplômée de l'Institut Français de Presse..."
                 className="w-full p-3.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs font-mono text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition leading-relaxed"
               />
-              <p className="text-[11px] text-neutral-400 mt-1">
-                Texte éditorial affiché dans la section Bio & Démarche Éditoriale.
-              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               {/* Légende photo */}
               <div>
                 <label className="block text-xs font-bold text-neutral-200 uppercase tracking-wider mb-2">
@@ -253,7 +342,7 @@ export default function WebsiteContentForm({
                   value={heroCaption}
                   onChange={(e) => setHeroCaption(e.target.value)}
                   placeholder="En direct de la rédaction centrale"
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
+                  className="w-full px-4 py-2 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
                 />
               </div>
 
@@ -268,18 +357,18 @@ export default function WebsiteContentForm({
                   value={heroBadgeStatus}
                   onChange={(e) => setHeroBadgeStatus(e.target.value)}
                   placeholder="En production active"
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
+                  className="w-full px-4 py-2 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
                 />
               </div>
             </div>
           </div>
 
-          {/* Gestion de la photo & Prévisualisation en direct */}
-          <div className="lg:col-span-4 space-y-4 bg-neutral-950/70 border border-neutral-800/90 rounded-2xl p-4 sm:p-5">
+          {/* Gestion de la photo, cadrage & Prévisualisation en direct */}
+          <div className="lg:col-span-5 space-y-4 bg-neutral-950/70 border border-neutral-800/90 rounded-2xl p-4 sm:p-5">
             <div className="flex items-center justify-between pb-2 border-b border-neutral-800">
               <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
                 <Camera className="w-4 h-4 text-brand-accent" />
-                <span>Photo du Journaliste</span>
+                <span>Photo & Cadrage Portrait</span>
               </div>
               <button
                 type="button"
@@ -288,23 +377,27 @@ export default function WebsiteContentForm({
                 className="text-[11px] text-neutral-400 hover:text-white flex items-center gap-1 transition"
               >
                 <RotateCcw className="w-3 h-3" />
-                <span>Par défaut</span>
+                <span>Réinitialiser</span>
               </button>
             </div>
 
-            {/* Cadre de prévisualisation miroir de la landing page */}
+            {/* Cadre de prévisualisation miroir fidèle de la landing page */}
             <div className="relative rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900/50 shadow-xl group">
               <div className="aspect-[4/3] relative w-full bg-neutral-950 flex items-center justify-center overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={photoPreview}
                   alt={`${heroJournalistName} - Prévisualisation`}
-                  className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-500"
+                  style={{
+                    objectPosition: heroPhotoPosition,
+                    transform: photoZoom > 1 ? `scale(${photoZoom})` : undefined,
+                  }}
+                  className="w-full h-full object-cover transition-all duration-300"
                   onError={() => setPhotoPreview("/images/journalist-portrait.jpg")}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-transparent opacity-60 pointer-events-none" />
-                <span className="absolute top-2 right-2 text-[10px] font-mono px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-neutral-300 border border-white/10 pointer-events-none">
-                  Aperçu live
+                <span className="absolute top-2 right-2 text-[10px] font-mono px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-neutral-300 border border-white/10 pointer-events-none">
+                  Aperçu Live Vitrine
                 </span>
               </div>
 
@@ -324,42 +417,146 @@ export default function WebsiteContentForm({
               </div>
             </div>
 
-            {/* Inputs de modification de l'image */}
-            <div className="space-y-3 pt-2">
-              {/* Option 1 : Téléversement local direct */}
+            {/* Outils d'ajustement / Cadrage du visage */}
+            <div className="space-y-3 p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800">
+              <div className="flex items-center justify-between text-xs font-bold text-neutral-200">
+                <span className="flex items-center gap-1.5">
+                  <MoveVertical className="w-3.5 h-3.5 text-brand-accent" />
+                  <span>Cadrage du visage</span>
+                </span>
+                <span className="font-mono text-[11px] text-brand-accentLight">
+                  {verticalPercent}%
+                </span>
+              </div>
+
+              {/* Boutons de presets rapides */}
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => applyPositionPreset("top")}
+                  className={`px-2 py-1.5 rounded-lg text-[11px] font-medium transition border ${
+                    verticalPercent <= 30
+                      ? "bg-brand-accent text-white border-brand-accent"
+                      : "bg-neutral-950 text-neutral-300 border-neutral-800 hover:text-white"
+                  }`}
+                >
+                  Haut (Visage)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPositionPreset("center")}
+                  className={`px-2 py-1.5 rounded-lg text-[11px] font-medium transition border ${
+                    verticalPercent > 30 && verticalPercent < 70
+                      ? "bg-brand-accent text-white border-brand-accent"
+                      : "bg-neutral-950 text-neutral-300 border-neutral-800 hover:text-white"
+                  }`}
+                >
+                  Centré
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPositionPreset("bottom")}
+                  className={`px-2 py-1.5 rounded-lg text-[11px] font-medium transition border ${
+                    verticalPercent >= 70
+                      ? "bg-brand-accent text-white border-brand-accent"
+                      : "bg-neutral-950 text-neutral-300 border-neutral-800 hover:text-white"
+                  }`}
+                >
+                  Bas
+                </button>
+              </div>
+
+              {/* Slider d'ajustement vertical fin */}
+              <div className="pt-1">
+                <div className="flex justify-between text-[10px] text-neutral-400 font-mono mb-1">
+                  <span>Haut (0%)</span>
+                  <span>Ajustement précis</span>
+                  <span>Bas (100%)</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={verticalPercent}
+                  onChange={(e) => handleVerticalSliderChange(parseInt(e.target.value, 10))}
+                  className="w-full accent-brand-accent cursor-pointer"
+                />
+              </div>
+
+              {/* Slider de zoom / échelle */}
+              <div className="pt-1 border-t border-neutral-800/80">
+                <div className="flex items-center justify-between text-xs font-bold text-neutral-200 mb-1">
+                  <span className="flex items-center gap-1.5">
+                    <ZoomIn className="w-3.5 h-3.5 text-brand-accent" />
+                    <span>Zoom de l&apos;image</span>
+                  </span>
+                  <span className="font-mono text-[11px] text-brand-accentLight">
+                    {photoZoom}x
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="1.5"
+                  step="0.05"
+                  value={photoZoom}
+                  onChange={(e) => setPhotoZoom(parseFloat(e.target.value))}
+                  className="w-full accent-brand-accent cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Actions de changement de photo */}
+            <div className="space-y-2 pt-1">
+              {/* Bouton de sélection / téléversement local avec compression automatique */}
               <div>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  name="heroPhotoFile"
                   accept="image/*"
                   onChange={handleFileSelect}
                   className="hidden"
                   id="heroPhotoFileInput"
+                  disabled={isProcessingImage}
                 />
                 <label
                   htmlFor="heroPhotoFileInput"
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-primary/80 hover:bg-brand-secondary text-brand-cream hover:text-white border border-brand-accent/30 text-xs font-semibold cursor-pointer transition shadow-sm"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-primary/80 hover:bg-brand-secondary text-brand-cream hover:text-white border border-brand-accent/40 text-xs font-bold cursor-pointer transition shadow-md"
                 >
-                  <Upload className="w-4 h-4 text-brand-accentLight" />
-                  <span>Téléverser une nouvelle photo</span>
+                  {isProcessingImage ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Compression en cours...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 text-brand-accentLight" />
+                      <span>Téléverser depuis l&apos;ordinateur</span>
+                    </>
+                  )}
                 </label>
               </div>
 
-              {/* Option 2 : URL d'image */}
+              {photoStatusMessage && (
+                <div className="text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{photoStatusMessage}</span>
+                </div>
+              )}
+
+              {/* Champ d'URL manuelle directe */}
               <div>
                 <label className="block text-[11px] font-medium text-neutral-400 mb-1">
-                  Ou renseigner l&apos;URL d&apos;une image :
+                  Ou coller une URL d&apos;image externe :
                 </label>
                 <input
                   type="text"
-                  name="heroPhotoUrl"
-                  value={heroPhotoUrl}
+                  value={heroPhotoUrl.startsWith("data:") ? "" : heroPhotoUrl}
                   onChange={(e) => {
                     setHeroPhotoUrl(e.target.value);
                     setPhotoPreview(e.target.value || "/images/journalist-portrait.jpg");
                   }}
-                  placeholder="https://... ou /images/portrait.jpg"
+                  placeholder={heroPhotoUrl.startsWith("data:") ? "Image encodée en base64 prête" : "https://... ou /images/portrait.jpg"}
                   className="w-full px-3 py-1.5 bg-neutral-950 border border-neutral-800 rounded-lg text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-brand-accent transition"
                 />
               </div>
@@ -823,24 +1020,36 @@ export default function WebsiteContentForm({
       </div>
 
       {/* Bouton d'enregistrement général */}
-      <div className="flex items-center justify-between pt-6 border-t border-neutral-800">
-        <a
-          href="/"
-          target="_blank"
-          className="inline-flex items-center gap-2 text-xs text-neutral-400 hover:text-white transition"
-        >
-          <ExternalLink className="w-4 h-4 text-brand-accent" />
-          <span>Prévisualiser le site vitrine</span>
-        </a>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-neutral-800">
+        <div className="flex items-center gap-4">
+          <a
+            href="/"
+            target="_blank"
+            className="inline-flex items-center gap-2 text-xs text-neutral-400 hover:text-white transition"
+          >
+            <ExternalLink className="w-4 h-4 text-brand-accent" />
+            <span>Prévisualiser le site vitrine</span>
+          </a>
+
+          {state?.success && (
+            <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Modifications sauvegardées avec succès</span>
+            </span>
+          )}
+        </div>
 
         <button
           type="submit"
-          disabled={isSaving}
+          disabled={isSaving || isProcessingImage}
           id="save-website-content-btn"
-          className="inline-flex items-center gap-2.5 px-7 py-3 rounded-2xl bg-brand-accent hover:bg-brand-accentLight text-white text-xs sm:text-sm font-bold shadow-xl shadow-brand-accent/25 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-2xl bg-brand-accent hover:bg-brand-accentLight text-white text-xs sm:text-sm font-bold shadow-xl shadow-brand-accent/25 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
         >
           {isSaving ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Enregistrement dans Neon en cours...</span>
+            </>
           ) : (
             <>
               <Save className="w-4 h-4" />

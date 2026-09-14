@@ -336,6 +336,7 @@ model VitrineSettings {
   heroTitle            String?  @default("Révéler le réel : journalisme d'investigation, podcasts et récits engagés.")
   heroBio              String?
   heroPhotoUrl         String?  @default("/images/journalist-portrait.jpg")
+  heroPhotoPosition    String?  @default("center center")
   heroBadgeStatus      String?  @default("En production active")
   heroCaption          String?  @default("En direct de la rédaction centrale")
   showTeaserBanner     Boolean  @default(true)

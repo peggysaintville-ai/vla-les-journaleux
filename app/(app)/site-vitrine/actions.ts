@@ -31,8 +31,9 @@ export async function updateWebsiteContentAction(
     const heroBio = (formData.get("heroBio") as string)?.trim() || "";
     const heroBadgeStatus = (formData.get("heroBadgeStatus") as string)?.trim() || "En production active";
     const heroCaption = (formData.get("heroCaption") as string)?.trim() || "En direct de la rédaction centrale";
+    const heroPhotoPosition = (formData.get("heroPhotoPosition") as string)?.trim() || "center center";
 
-    // Gestion de la photo du journaliste (Upload de fichier ou URL)
+    // Gestion de la photo du journaliste (Data URL base64, Upload de fichier ou URL)
     let heroPhotoUrl = (formData.get("heroPhotoUrl") as string)?.trim() || null;
     const heroPhotoFile = formData.get("heroPhotoFile") as File | null;
 
@@ -49,7 +50,25 @@ export async function updateWebsiteContentAction(
         fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
         heroPhotoUrl = `/uploads/${fileName}`;
       } catch (uploadErr) {
-        console.warn("Erreur sauvegarde upload image, conservation de l'URL existante :", uploadErr);
+        console.warn("Erreur sauvegarde upload image :", uploadErr);
+      }
+    } else if (heroPhotoUrl && heroPhotoUrl.startsWith("data:image/")) {
+      try {
+        const matches = heroPhotoUrl.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+        if (matches) {
+          const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
+          const data = matches[2];
+          const buffer = Buffer.from(data, "base64");
+          const uploadsDir = path.join(process.cwd(), "public", "uploads");
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+          const fileName = `portrait-${Date.now()}.${ext}`;
+          fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+          heroPhotoUrl = `/uploads/${fileName}`;
+        }
+      } catch (diskErr) {
+        console.warn("Stockage direct de la Data URL en base Neon (fallback serverless) :", diskErr);
       }
     }
 
@@ -101,6 +120,7 @@ export async function updateWebsiteContentAction(
       heroTitle,
       heroBio: heroBio || bioText,
       heroPhotoUrl,
+      heroPhotoPosition,
       heroBadgeStatus,
       heroCaption,
       showTeaserBanner,

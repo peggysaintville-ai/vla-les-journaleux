@@ -3,8 +3,9 @@
   "heroJournalistName": "Peggy SAINT-VILLE",
   "heroSubtitle": "Studio de Production & Rédaction d'Investigation Sonore",
   "heroTitle": "Révéler le réel : journalisme d'investigation, podcasts et récits engagés.",
-  "heroBio": "Diplômée de l'Institut Français de Presse et passée par les rédactions de radio publique, j'ai forgé ma pratique journalistique au contact direct du terrain.\n\nMon travail s'articule autour de l'investigation sociale, des mutations économiques, des bouleversements technologiques et de la géopolitique des ressources. L'audio permet une intimité et une authenticité rares : il restitue l'hésitation, la vérité d'une voix humaine et l'atmosphère brute d'un lieu d'enquête.\n\nMembre de collectifs internationaux de journalistes d'investigation, je mène chaque projet dans le strict respect de la déontologie et de la protection des sources.",
+  "heroBio": "Diplômée de l'Institut Français de Presse et passée par les rédactions de radio publique, j'ai forgé ma pratique journalistique au contact direct du terrain.\r\n\r\nMon travail s'articule autour de l'investigation sociale, des mutations économiques, des bouleversements technologiques et de la géopolitique des ressources. L'audio permet une intimité et une authenticité rares : il restitue l'hésitation, la vérité d'une voix humaine et l'atmosphère brute d'un lieu d'enquête.\r\n\r\nMembre de collectifs internationaux de journalistes d'investigation, je mène chaque projet dans le strict respect de la déontologie et de la protection des sources.",
   "heroPhotoUrl": "/images/journalist-portrait.jpg",
+  "heroPhotoPosition": "center center",
   "heroBadgeStatus": "En production active",
   "heroCaption": "En direct de la rédaction centrale",
   "showTeaserBanner": true,
@@ -22,7 +23,7 @@
   "showBioSection": true,
   "showContactSection": true,
   "bioTitle": "L'indépendance comme boussole, l'humain comme centre.",
-  "bioText": "Diplômée de l'Institut Français de Presse et passée par les rédactions de radio publique, j'ai forgé ma pratique journalistique au contact direct du terrain.\n\nMon travail s'articule autour de l'investigation sociale, des mutations économiques, des bouleversements technologiques et de la géopolitique des ressources. L'audio permet une intimité et une authenticité rares : il restitue l'hésitation, la vérité d'une voix humaine et l'atmosphère brute d'un lieu d'enquête.\n\nMembre de collectifs internationaux de journalistes d'investigation, je mène chaque projet dans le strict respect de la déontologie et de la protection des sources.",
+  "bioText": "Diplômée de l'Institut Français de Presse et passée par les rédactions de radio publique, j'ai forgé ma pratique journalistique au contact direct du terrain.\r\n\r\nMon travail s'articule autour de l'investigation sociale, des mutations économiques, des bouleversements technologiques et de la géopolitique des ressources. L'audio permet une intimité et une authenticité rares : il restitue l'hésitation, la vérité d'une voix humaine et l'atmosphère brute d'un lieu d'enquête.\r\n\r\nMembre de collectifs internationaux de journalistes d'investigation, je mène chaque projet dans le strict respect de la déontologie et de la protection des sources.",
   "createdAt": "2026-09-14T21:04:22.587Z",
-  "updatedAt": "2026-09-14T21:04:22.587Z"
+  "updatedAt": "2026-09-14T23:39:04.806Z"
 }

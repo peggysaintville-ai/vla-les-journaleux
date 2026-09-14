@@ -5,6 +5,7 @@ export interface VitrineSettingsData {
   heroTitle?: string | null;
   heroBio?: string | null;
   heroPhotoUrl?: string | null;
+  heroPhotoPosition?: string | null;
   heroBadgeStatus?: string | null;
   heroCaption?: string | null;
   showTeaserBanner: boolean;
@@ -37,6 +38,7 @@ Mon travail s'articule autour de l'investigation sociale, des mutations économi
 
 Membre de collectifs internationaux de journalistes d'investigation, je mène chaque projet dans le strict respect de la déontologie et de la protection des sources.`,
   heroPhotoUrl: "/images/journalist-portrait.jpg",
+  heroPhotoPosition: "center center",
   heroBadgeStatus: "En production active",
   heroCaption: "En direct de la rédaction centrale",
   showTeaserBanner: true,

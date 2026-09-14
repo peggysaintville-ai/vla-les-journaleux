@@ -142,7 +142,8 @@ export default async function PublicShowcasePage() {
                   <img
                     src={vitrineSettings.heroPhotoUrl || "/images/journalist-portrait.jpg"}
                     alt={`${vitrineSettings.heroJournalistName || "Peggy SAINT-VILLE"} - Journaliste d'investigation`}
-                    className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-700"
+                    style={{ objectPosition: vitrineSettings.heroPhotoPosition || "center center" }}
+                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-700"
                   />
                   {/* Subtle vignette gradient */}
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-transparent opacity-60 pointer-events-none" />
