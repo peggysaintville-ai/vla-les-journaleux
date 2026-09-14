@@ -48,7 +48,7 @@ export async function submitContactAction(
     return {
       success: true,
       message:
-        "Votre demande a été transmise avec succès. Louise et son équipe éditoriale vous recontacteront sous 24 à 48 heures ouvrées.",
+        "Votre demande a été transmise avec succès. Notre équipe éditoriale vous recontactera sous 24 à 48 heures ouvrées.",
     };
   } catch (error) {
     console.error("Erreur d'enregistrement du contact :", error);

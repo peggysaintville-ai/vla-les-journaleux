@@ -1,4 +1,5 @@
 import { getArticleBySlug, getArticles } from "@/lib/articles";
+import { getVitrineSettings } from "@/lib/vitrine-settings";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -32,7 +33,10 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function PublicArticlePage({ params }: Props) {
   const { slug } = await params;
-  const article = await getArticleBySlug(slug);
+  const [article, vitrineSettings] = await Promise.all([
+    getArticleBySlug(slug),
+    getVitrineSettings(),
+  ]);
 
   if (!article || !article.isPublished) {
     notFound();
@@ -101,7 +105,9 @@ export default async function PublicArticlePage({ params }: Props) {
                 />
               </div>
               <div>
-                <div className="text-xs font-bold text-white">Louise Vaneau</div>
+                <div className="text-xs font-bold text-white">
+                  {vitrineSettings.heroJournalistName || "Peggy SAINT-VILLE"}
+                </div>
                 <div className="text-[11px] text-neutral-400 font-mono">
                   Rédaction V&apos;LÀ LES JOURNALEUX • Carte de presse n° 128492
                 </div>
@@ -198,7 +204,7 @@ export default async function PublicArticlePage({ params }: Props) {
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Toutes nos publications</span>
             </Link>
-            <span>© V&apos;LÀ LES JOURNALEUX • Louise Vaneau</span>
+            <span>© V&apos;LÀ LES JOURNALEUX • {vitrineSettings.heroJournalistName || "Peggy SAINT-VILLE"}</span>
           </div>
         </div>
       </div>

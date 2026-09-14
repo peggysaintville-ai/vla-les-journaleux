@@ -33,7 +33,7 @@ export default async function PublicLayout({
                 V&apos;LÀ LES JOURNALEUX
               </span>
               <span className="text-[10px] sm:text-[11px] font-mono tracking-wider uppercase text-brand-cream/70">
-                Louise Vaneau • Studio d&apos;Investigation
+                {vitrineSettings.heroJournalistName || "Peggy SAINT-VILLE"} • Studio d&apos;Investigation
               </span>
             </div>
           </Link>
@@ -58,46 +58,47 @@ export default async function PublicLayout({
             )}
             {vitrineSettings.showArticlesSection && (
               <a
-                href="#articles"
+                href="#enquetes"
                 className="hover:text-brand-accentLight transition-colors duration-200 tracking-wide"
               >
-                Articles & Enquêtes
+                Enquêtes
               </a>
             )}
-            <a
-              href="#prestations"
-              className="hover:text-brand-accentLight transition-colors duration-200 tracking-wide"
-            >
-              Prestations
-            </a>
+            {vitrineSettings.showContactSection && (
+              <a
+                href="#prestations"
+                className="hover:text-brand-accentLight transition-colors duration-200 tracking-wide"
+              >
+                Prestations & Tarifs
+              </a>
+            )}
             {vitrineSettings.showContactSection && (
               <a
                 href="#contact"
                 className="hover:text-brand-accentLight transition-colors duration-200 tracking-wide"
               >
-                Contact & Devis
+                Contact
               </a>
             )}
           </nav>
 
-          {/* Bouton Accès Pro vers /login */}
-          <div className="flex items-center gap-4">
+          {/* Actions : Login */}
+          <div className="flex items-center gap-3">
             <Link
               href="/login"
-              id="header-login-btn"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold tracking-wide uppercase bg-brand-primary hover:bg-brand-secondary text-brand-cream hover:text-white border border-brand-accent/40 hover:border-brand-accentLight shadow-sm transition-all duration-200 group"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-primary/80 hover:bg-brand-secondary text-brand-cream hover:text-white border border-brand-accent/30 text-xs font-semibold transition"
             >
-              <Lock className="w-3.5 h-3.5 text-brand-accentLight group-hover:scale-110 transition-transform" />
-              <span>Accès Pro</span>
+              <Lock className="w-3.5 h-3.5 text-brand-accentLight" />
+              <span>Espace Rédaction</span>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Contenu principal */}
+      {/* Contenu de la vitrine */}
       <main className="flex-1">{children}</main>
 
-      {/* Ambiance Sonore avec Coupure Intelligente (Smart Audio Mute) */}
+      {/* Lecteur de fond sonore permanent discret (géré par cookie/localStorage) */}
       <BackgroundAudio
         enabled={vitrineSettings.showAudioBackground}
         audioUrl={vitrineSettings.audioBackgroundUrl}
@@ -105,8 +106,8 @@ export default async function PublicLayout({
         defaultVolume={0.20}
       />
 
-      {/* Footer */}
-      <footer className="border-t border-neutral-800/80 bg-neutral-950 py-12 text-neutral-400 text-xs">
+      {/* Footer minimaliste et premium */}
+      <footer className="border-t border-neutral-800/80 bg-neutral-950 py-12 text-xs text-neutral-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col items-center md:items-start gap-1">
             <div className="flex items-center gap-2 font-semibold text-white">
@@ -114,7 +115,7 @@ export default async function PublicLayout({
               <span>Disponible pour missions éditoriales, modérations et tournages</span>
             </div>
             <p className="text-neutral-500">
-              © {new Date().getFullYear()} V&apos;LÀ LES JOURNALEUX • Louise Vaneau. Tous droits réservés. Carte de presse n° 128492.
+              © {new Date().getFullYear()} V&apos;LÀ LES JOURNALEUX • {vitrineSettings.heroJournalistName || "Peggy SAINT-VILLE"}. Tous droits réservés. Carte de presse n° 128492.
             </p>
           </div>
 

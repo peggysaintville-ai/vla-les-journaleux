@@ -79,11 +79,11 @@ export default async function PublicShowcasePage() {
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1]">
-                {websiteContent.heroTitle}
+                {vitrineSettings.heroTitle || websiteContent.heroTitle}
               </h1>
 
               <p className="text-base sm:text-lg text-neutral-300 max-w-2xl leading-relaxed">
-                {websiteContent.heroSubtitle}
+                {vitrineSettings.heroSubtitle || websiteContent.heroSubtitle}
               </p>
 
               {/* Boutons d'action hero */}
@@ -137,31 +137,29 @@ export default async function PublicShowcasePage() {
             {/* Colonne Portrait Éditorial */}
             <div className="lg:col-span-5 relative">
               <div className="relative mx-auto max-w-md lg:max-w-none rounded-3xl overflow-hidden border border-neutral-800 bg-neutral-900/50 shadow-2xl group">
-                <div className="aspect-[4/3] sm:aspect-[4/3] relative">
-                  <Image
-                    src="/images/journalist-portrait.jpg"
-                    alt="Louise Vaneau - Journaliste d'investigation en studio"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    priority
-                    className="object-cover object-center group-hover:scale-102 transition-transform duration-700"
+                <div className="aspect-[4/3] sm:aspect-[4/3] relative w-full overflow-hidden bg-neutral-950">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={vitrineSettings.heroPhotoUrl || "/images/journalist-portrait.jpg"}
+                    alt={`${vitrineSettings.heroJournalistName || "Peggy SAINT-VILLE"} - Journaliste d'investigation`}
+                    className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-700"
                   />
                   {/* Subtle vignette gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-transparent opacity-60" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-transparent opacity-60 pointer-events-none" />
                 </div>
 
                 <div className="p-5 bg-neutral-900/90 border-t border-neutral-800/80 backdrop-blur-md flex items-center justify-between">
                   <div>
                     <div className="text-sm font-bold text-white">
-                      Louise Vaneau
+                      {vitrineSettings.heroJournalistName || "Peggy SAINT-VILLE"}
                     </div>
                     <div className="text-xs text-neutral-400">
-                      En direct de la rédaction centrale
+                      {vitrineSettings.heroCaption || "En direct de la rédaction centrale"}
                     </div>
                   </div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-mono font-medium">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>En production active</span>
+                    <span>{vitrineSettings.heroBadgeStatus || "En production active"}</span>
                   </div>
                 </div>
               </div>
@@ -266,7 +264,7 @@ export default async function PublicShowcasePage() {
                     {vitrineSettings.bioTitle || "L'indépendance comme boussole, l'humain comme centre."}
                   </h2>
                   <div className="space-y-4 text-sm text-neutral-300 leading-relaxed">
-                    {(vitrineSettings.bioText || websiteContent.bioText).split("\n\n").map((para, i) => (
+                    {(vitrineSettings.heroBio || vitrineSettings.bioText || websiteContent.bioText).split("\n\n").map((para, i) => (
                       <p key={i}>{para}</p>
                     ))}
                   </div>

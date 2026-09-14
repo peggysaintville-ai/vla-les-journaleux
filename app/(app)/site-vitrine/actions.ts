@@ -5,6 +5,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { updateWebsiteContent, WebsiteContentData } from "@/lib/website-content";
 import { updateVitrineSettings, VitrineSettingsData } from "@/lib/vitrine-settings";
 
+import fs from "fs";
+import path from "path";
+
 export interface WebsiteContentActionResult {
   success?: boolean;
   error?: string;
@@ -21,9 +24,40 @@ export async function updateWebsiteContentAction(
       return { error: "Session non authentifiée. Veuillez vous reconnecter." };
     }
 
-    const heroTitle = (formData.get("heroTitle") as string)?.trim() || "Journalisme d'investigation, podcasts et récits engagés.";
-    const heroSubtitle = (formData.get("heroSubtitle") as string)?.trim() || "De l'enquête au grand reportage, je raconte les récits qui dérangent et éclairent.";
-    const bioText = (formData.get("bioText") as string)?.trim() || "";
+    // 0. Identité & Présentation Hero du Journaliste
+    const heroJournalistName = (formData.get("heroJournalistName") as string)?.trim() || "Peggy SAINT-VILLE";
+    const heroSubtitle = (formData.get("heroSubtitle") as string)?.trim() || "Studio de Production & Rédaction d'Investigation Sonore";
+    const heroTitle = (formData.get("heroTitle") as string)?.trim() || "Révéler le réel : journalisme d'investigation, podcasts et récits engagés.";
+    const heroBio = (formData.get("heroBio") as string)?.trim() || "";
+    const heroBadgeStatus = (formData.get("heroBadgeStatus") as string)?.trim() || "En production active";
+    const heroCaption = (formData.get("heroCaption") as string)?.trim() || "En direct de la rédaction centrale";
+
+    // Gestion de la photo du journaliste (Upload de fichier ou URL)
+    let heroPhotoUrl = (formData.get("heroPhotoUrl") as string)?.trim() || null;
+    const heroPhotoFile = formData.get("heroPhotoFile") as File | null;
+
+    if (heroPhotoFile && heroPhotoFile.size > 0 && typeof heroPhotoFile.arrayBuffer === "function") {
+      try {
+        const bytes = await heroPhotoFile.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const uploadsDir = path.join(process.cwd(), "public", "uploads");
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const cleanName = heroPhotoFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const fileName = `portrait-${Date.now()}-${cleanName}`;
+        fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+        heroPhotoUrl = `/uploads/${fileName}`;
+      } catch (uploadErr) {
+        console.warn("Erreur sauvegarde upload image, conservation de l'URL existante :", uploadErr);
+      }
+    }
+
+    if (!heroPhotoUrl) {
+      heroPhotoUrl = "/images/journalist-portrait.jpg";
+    }
+
+    const bioText = (formData.get("bioText") as string)?.trim() || heroBio || "";
     const bioTitle = (formData.get("bioTitle") as string)?.trim() || "L'indépendance comme boussole, l'humain comme centre.";
     const contactEmail = (formData.get("contactEmail") as string)?.trim() || "contact@vlalesjournaleux.fr";
 
@@ -60,8 +94,15 @@ export async function updateWebsiteContentAction(
     const showBioSection = formData.get("showBioSection") === "on" || formData.get("showBioSection") === "true";
     const showContactSection = formData.get("showContactSection") === "on" || formData.get("showContactSection") === "true";
 
-    // Mise à jour de VitrineSettings
+    // Mise à jour de VitrineSettings dans la base Neon
     await updateVitrineSettings({
+      heroJournalistName,
+      heroSubtitle,
+      heroTitle,
+      heroBio: heroBio || bioText,
+      heroPhotoUrl,
+      heroBadgeStatus,
+      heroCaption,
       showTeaserBanner,
       teaserTitle,
       teaserSubtitle,
@@ -77,14 +118,14 @@ export async function updateWebsiteContentAction(
       showBioSection,
       showContactSection,
       bioTitle,
-      bioText,
+      bioText: bioText || heroBio,
     });
 
     // Mise à jour rétrocompatible de WebsiteContent
     await updateWebsiteContent({
       heroTitle,
       heroSubtitle,
-      bioText,
+      bioText: bioText || heroBio,
       contactEmail,
       socialSpotify,
       socialApple,

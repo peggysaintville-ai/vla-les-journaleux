@@ -331,6 +331,13 @@ model WebsiteContent {
 
 model VitrineSettings {
   id                   String   @id @default(cuid())
+  heroJournalistName   String?  @default("Peggy SAINT-VILLE")
+  heroSubtitle         String?  @default("Studio de Production & Rédaction d'Investigation Sonore")
+  heroTitle            String?  @default("Révéler le réel : journalisme d'investigation, podcasts et récits engagés.")
+  heroBio              String?
+  heroPhotoUrl         String?  @default("/images/journalist-portrait.jpg")
+  heroBadgeStatus      String?  @default("En production active")
+  heroCaption          String?  @default("En direct de la rédaction centrale")
   showTeaserBanner     Boolean  @default(true)
   teaserTitle          String?
   teaserSubtitle       String?

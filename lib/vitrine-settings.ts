@@ -39,6 +39,13 @@ export async function getVitrineSettings(): Promise<VitrineSettingsData> {
     if (!settings) {
       settings = await db.vitrineSettings.create({
         data: {
+          heroJournalistName: DEFAULT_VITRINE_SETTINGS.heroJournalistName,
+          heroSubtitle: DEFAULT_VITRINE_SETTINGS.heroSubtitle,
+          heroTitle: DEFAULT_VITRINE_SETTINGS.heroTitle,
+          heroBio: DEFAULT_VITRINE_SETTINGS.heroBio,
+          heroPhotoUrl: DEFAULT_VITRINE_SETTINGS.heroPhotoUrl,
+          heroBadgeStatus: DEFAULT_VITRINE_SETTINGS.heroBadgeStatus,
+          heroCaption: DEFAULT_VITRINE_SETTINGS.heroCaption,
           showTeaserBanner: DEFAULT_VITRINE_SETTINGS.showTeaserBanner,
           teaserTitle: DEFAULT_VITRINE_SETTINGS.teaserTitle,
           teaserSubtitle: DEFAULT_VITRINE_SETTINGS.teaserSubtitle,
@@ -62,6 +69,13 @@ export async function getVitrineSettings(): Promise<VitrineSettingsData> {
     if (settings) {
       const res: VitrineSettingsData = {
         id: settings.id,
+        heroJournalistName: settings.heroJournalistName ?? DEFAULT_VITRINE_SETTINGS.heroJournalistName,
+        heroSubtitle: settings.heroSubtitle ?? DEFAULT_VITRINE_SETTINGS.heroSubtitle,
+        heroTitle: settings.heroTitle ?? DEFAULT_VITRINE_SETTINGS.heroTitle,
+        heroBio: settings.heroBio ?? DEFAULT_VITRINE_SETTINGS.heroBio,
+        heroPhotoUrl: settings.heroPhotoUrl ?? DEFAULT_VITRINE_SETTINGS.heroPhotoUrl,
+        heroBadgeStatus: settings.heroBadgeStatus ?? DEFAULT_VITRINE_SETTINGS.heroBadgeStatus,
+        heroCaption: settings.heroCaption ?? DEFAULT_VITRINE_SETTINGS.heroCaption,
         showTeaserBanner: settings.showTeaserBanner,
         teaserTitle: settings.teaserTitle ?? DEFAULT_VITRINE_SETTINGS.teaserTitle,
         teaserSubtitle: settings.teaserSubtitle ?? DEFAULT_VITRINE_SETTINGS.teaserSubtitle,
@@ -110,6 +124,13 @@ export async function updateVitrineSettings(
       const updated = await db.vitrineSettings.update({
         where: { id: existing.id },
         data: {
+          heroJournalistName: data.heroJournalistName !== undefined ? data.heroJournalistName : existing.heroJournalistName,
+          heroSubtitle: data.heroSubtitle !== undefined ? data.heroSubtitle : existing.heroSubtitle,
+          heroTitle: data.heroTitle !== undefined ? data.heroTitle : existing.heroTitle,
+          heroBio: data.heroBio !== undefined ? data.heroBio : existing.heroBio,
+          heroPhotoUrl: data.heroPhotoUrl !== undefined ? data.heroPhotoUrl : existing.heroPhotoUrl,
+          heroBadgeStatus: data.heroBadgeStatus !== undefined ? data.heroBadgeStatus : existing.heroBadgeStatus,
+          heroCaption: data.heroCaption !== undefined ? data.heroCaption : existing.heroCaption,
           showTeaserBanner: data.showTeaserBanner !== undefined ? data.showTeaserBanner : existing.showTeaserBanner,
           teaserTitle: data.teaserTitle !== undefined ? data.teaserTitle : existing.teaserTitle,
           teaserSubtitle: data.teaserSubtitle !== undefined ? data.teaserSubtitle : existing.teaserSubtitle,
@@ -131,6 +152,13 @@ export async function updateVitrineSettings(
 
       result = {
         id: updated.id,
+        heroJournalistName: updated.heroJournalistName,
+        heroSubtitle: updated.heroSubtitle,
+        heroTitle: updated.heroTitle,
+        heroBio: updated.heroBio,
+        heroPhotoUrl: updated.heroPhotoUrl,
+        heroBadgeStatus: updated.heroBadgeStatus,
+        heroCaption: updated.heroCaption,
         showTeaserBanner: updated.showTeaserBanner,
         teaserTitle: updated.teaserTitle,
         teaserSubtitle: updated.teaserSubtitle,
@@ -153,6 +181,13 @@ export async function updateVitrineSettings(
     } else {
       const created = await db.vitrineSettings.create({
         data: {
+          heroJournalistName: data.heroJournalistName ?? DEFAULT_VITRINE_SETTINGS.heroJournalistName,
+          heroSubtitle: data.heroSubtitle ?? DEFAULT_VITRINE_SETTINGS.heroSubtitle,
+          heroTitle: data.heroTitle ?? DEFAULT_VITRINE_SETTINGS.heroTitle,
+          heroBio: data.heroBio ?? DEFAULT_VITRINE_SETTINGS.heroBio,
+          heroPhotoUrl: data.heroPhotoUrl ?? DEFAULT_VITRINE_SETTINGS.heroPhotoUrl,
+          heroBadgeStatus: data.heroBadgeStatus ?? DEFAULT_VITRINE_SETTINGS.heroBadgeStatus,
+          heroCaption: data.heroCaption ?? DEFAULT_VITRINE_SETTINGS.heroCaption,
           showTeaserBanner: data.showTeaserBanner ?? DEFAULT_VITRINE_SETTINGS.showTeaserBanner,
           teaserTitle: data.teaserTitle ?? DEFAULT_VITRINE_SETTINGS.teaserTitle,
           teaserSubtitle: data.teaserSubtitle ?? DEFAULT_VITRINE_SETTINGS.teaserSubtitle,
@@ -174,6 +209,13 @@ export async function updateVitrineSettings(
 
       result = {
         id: created.id,
+        heroJournalistName: created.heroJournalistName,
+        heroSubtitle: created.heroSubtitle,
+        heroTitle: created.heroTitle,
+        heroBio: created.heroBio,
+        heroPhotoUrl: created.heroPhotoUrl,
+        heroBadgeStatus: created.heroBadgeStatus,
+        heroCaption: created.heroCaption,
         showTeaserBanner: created.showTeaserBanner,
         teaserTitle: created.teaserTitle,
         teaserSubtitle: created.teaserSubtitle,

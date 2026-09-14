@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useRef } from "react";
 import type { WebsiteContentData } from "@/lib/website-content";
 import { VitrineSettingsData, DEFAULT_VITRINE_SETTINGS } from "@/lib/vitrine-settings-types";
 import { updateWebsiteContentAction } from "@/app/(app)/site-vitrine/actions";
@@ -12,20 +12,19 @@ import {
   AlertCircle,
   ExternalLink,
   Sparkles,
-  Eye,
   Edit3,
   Mail,
   Music,
-  Tv,
   Share2,
-  Info,
   Radio,
-  Calendar,
   Video,
-  Layers,
   Volume2,
   Sliders,
-  Check,
+  UserCheck,
+  Camera,
+  Upload,
+  RotateCcw,
+  BadgeCheck,
 } from "lucide-react";
 
 interface WebsiteContentFormProps {
@@ -51,8 +50,35 @@ export default function WebsiteContentForm({
     return await updateWebsiteContentAction(prev, fd);
   }, null);
 
-  const [previewTitle, setPreviewTitle] = useState(initialContent.heroTitle);
-  const [previewSubtitle, setPreviewSubtitle] = useState(initialContent.heroSubtitle);
+  // État local de la section Hero / Identité
+  const [heroJournalistName, setHeroJournalistName] = useState(
+    settings.heroJournalistName || "Peggy SAINT-VILLE"
+  );
+  const [heroTitle, setHeroTitle] = useState(
+    settings.heroTitle || initialContent.heroTitle || "Révéler le réel : journalisme d'investigation, podcasts et récits engagés."
+  );
+  const [heroSubtitle, setHeroSubtitle] = useState(
+    settings.heroSubtitle || initialContent.heroSubtitle || "Studio de Production & Rédaction d'Investigation Sonore"
+  );
+  const [heroBio, setHeroBio] = useState(
+    settings.heroBio || settings.bioText || initialContent.bioText || ""
+  );
+  const [heroPhotoUrl, setHeroPhotoUrl] = useState(
+    settings.heroPhotoUrl || "/images/journalist-portrait.jpg"
+  );
+  const [photoPreview, setPhotoPreview] = useState(
+    settings.heroPhotoUrl || "/images/journalist-portrait.jpg"
+  );
+  const [heroBadgeStatus, setHeroBadgeStatus] = useState(
+    settings.heroBadgeStatus || "En production active"
+  );
+  const [heroCaption, setHeroCaption] = useState(
+    settings.heroCaption || "En direct de la rédaction centrale"
+  );
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Autres états d'aperçu
   const [videoUrlPreview, setVideoUrlPreview] = useState(settings.videoUrl || "");
   const [audioEmbedPreview, setAudioEmbedPreview] = useState(settings.audioEmbedUrl || "");
 
@@ -63,6 +89,22 @@ export default function WebsiteContentForm({
   const [showArticles, setShowArticles] = useState(settings.showArticlesSection);
   const [showBio, setShowBio] = useState(settings.showBioSection);
   const [showContact, setShowContact] = useState(settings.showContactSection);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setPhotoPreview(previewUrl);
+    }
+  };
+
+  const handleResetPhoto = () => {
+    setHeroPhotoUrl("/images/journalist-portrait.jpg");
+    setPhotoPreview("/images/journalist-portrait.jpg");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   return (
     <form action={formAction} className="space-y-8 pb-16">
@@ -92,7 +134,241 @@ export default function WebsiteContentForm({
         </div>
       )}
 
-      {/* 1. CARTE MODULARITÉ NO-CODE : PILOTAGE DES SECTIONS DE LA VITRINE */}
+      {/* 1. CARTE PRINCIPALE : IDENTITÉ & PRÉSENTATION HERO (CMS COMPLET) */}
+      <div className="bg-neutral-900/80 border border-brand-accent/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-neutral-800 gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-brand-primary text-brand-accent border border-brand-accent/30 shadow-md">
+              <UserCheck className="w-6 h-6 text-brand-accentLight" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                <span>Identité & Présentation Hero</span>
+                <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-brand-accent/20 text-brand-accentLight border border-brand-accent/30">
+                  En-tête Vitrine
+                </span>
+              </h2>
+              <p className="text-xs text-neutral-300">
+                Personnalisez le nom officiel, le portrait, le titre principal H1, le statut d&apos;activité et la légende sans toucher au code.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Synchro Directe Neon</span>
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Formulaire de l'identité */}
+          <div className="lg:col-span-8 space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Nom complet du journaliste */}
+              <div>
+                <label className="block text-xs font-bold text-neutral-200 uppercase tracking-wider mb-2">
+                  Nom du Journaliste affiché *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="heroJournalistName"
+                    required
+                    value={heroJournalistName}
+                    onChange={(e) => setHeroJournalistName(e.target.value)}
+                    placeholder="ex: Peggy SAINT-VILLE"
+                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs sm:text-sm text-white font-medium placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
+                  />
+                  <BadgeCheck className="w-4 h-4 text-brand-accentLight absolute right-3 top-3 pointer-events-none" />
+                </div>
+                <p className="text-[11px] text-neutral-400 mt-1">
+                  Apparaît dans le header, le footer, les mentions légales et les badges.
+                </p>
+              </div>
+
+              {/* Sous-titre / Positionnement */}
+              <div>
+                <label className="block text-xs font-bold text-neutral-200 uppercase tracking-wider mb-2">
+                  Sous-titre / Positionnement *
+                </label>
+                <input
+                  type="text"
+                  name="heroSubtitle"
+                  required
+                  value={heroSubtitle}
+                  onChange={(e) => setHeroSubtitle(e.target.value)}
+                  placeholder="Studio de Production & Rédaction d'Investigation Sonore"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs sm:text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
+                />
+                <p className="text-[11px] text-neutral-400 mt-1">
+                  Accroche immédiate sous le nom de marque et dans le chapeau.
+                </p>
+              </div>
+            </div>
+
+            {/* Titre H1 Hero */}
+            <div>
+              <label className="block text-xs font-bold text-neutral-200 uppercase tracking-wider mb-2">
+                Titre Principal H1 (Accroche Majeure) *
+              </label>
+              <textarea
+                name="heroTitle"
+                required
+                rows={2}
+                value={heroTitle}
+                onChange={(e) => setHeroTitle(e.target.value)}
+                placeholder="Révéler le réel : journalisme d'investigation, podcasts et récits engagés."
+                className="w-full p-3.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs sm:text-sm text-white font-semibold placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition leading-snug"
+              />
+            </div>
+
+            {/* Biographie de présentation */}
+            <div>
+              <label className="block text-xs font-bold text-neutral-200 uppercase tracking-wider mb-2">
+                Texte de Présentation & Biographie Complète
+              </label>
+              <textarea
+                name="heroBio"
+                rows={5}
+                value={heroBio}
+                onChange={(e) => setHeroBio(e.target.value)}
+                placeholder="Diplômée de l'Institut Français de Presse..."
+                className="w-full p-3.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs font-mono text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition leading-relaxed"
+              />
+              <p className="text-[11px] text-neutral-400 mt-1">
+                Texte éditorial affiché dans la section Bio & Démarche Éditoriale.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {/* Légende photo */}
+              <div>
+                <label className="block text-xs font-bold text-neutral-200 uppercase tracking-wider mb-2">
+                  Légende sous la Photo
+                </label>
+                <input
+                  type="text"
+                  name="heroCaption"
+                  value={heroCaption}
+                  onChange={(e) => setHeroCaption(e.target.value)}
+                  placeholder="En direct de la rédaction centrale"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
+                />
+              </div>
+
+              {/* Statut d'activité */}
+              <div>
+                <label className="block text-xs font-bold text-neutral-200 uppercase tracking-wider mb-2">
+                  Statut & Disponibilité
+                </label>
+                <input
+                  type="text"
+                  name="heroBadgeStatus"
+                  value={heroBadgeStatus}
+                  onChange={(e) => setHeroBadgeStatus(e.target.value)}
+                  placeholder="En production active"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Gestion de la photo & Prévisualisation en direct */}
+          <div className="lg:col-span-4 space-y-4 bg-neutral-950/70 border border-neutral-800/90 rounded-2xl p-4 sm:p-5">
+            <div className="flex items-center justify-between pb-2 border-b border-neutral-800">
+              <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                <Camera className="w-4 h-4 text-brand-accent" />
+                <span>Photo du Journaliste</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleResetPhoto}
+                title="Rétablir l'image par défaut"
+                className="text-[11px] text-neutral-400 hover:text-white flex items-center gap-1 transition"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Par défaut</span>
+              </button>
+            </div>
+
+            {/* Cadre de prévisualisation miroir de la landing page */}
+            <div className="relative rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900/50 shadow-xl group">
+              <div className="aspect-[4/3] relative w-full bg-neutral-950 flex items-center justify-center overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photoPreview}
+                  alt={`${heroJournalistName} - Prévisualisation`}
+                  className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-500"
+                  onError={() => setPhotoPreview("/images/journalist-portrait.jpg")}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-transparent opacity-60 pointer-events-none" />
+                <span className="absolute top-2 right-2 text-[10px] font-mono px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-neutral-300 border border-white/10 pointer-events-none">
+                  Aperçu live
+                </span>
+              </div>
+
+              <div className="p-3 bg-neutral-900/90 border-t border-neutral-800/80 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white truncate">
+                    {heroJournalistName || "Peggy SAINT-VILLE"}
+                  </div>
+                  <div className="text-[11px] text-neutral-400 truncate">
+                    {heroCaption || "En direct de la rédaction centrale"}
+                  </div>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-medium shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{heroBadgeStatus || "En production active"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Inputs de modification de l'image */}
+            <div className="space-y-3 pt-2">
+              {/* Option 1 : Téléversement local direct */}
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  name="heroPhotoFile"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="heroPhotoFileInput"
+                />
+                <label
+                  htmlFor="heroPhotoFileInput"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-primary/80 hover:bg-brand-secondary text-brand-cream hover:text-white border border-brand-accent/30 text-xs font-semibold cursor-pointer transition shadow-sm"
+                >
+                  <Upload className="w-4 h-4 text-brand-accentLight" />
+                  <span>Téléverser une nouvelle photo</span>
+                </label>
+              </div>
+
+              {/* Option 2 : URL d'image */}
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-400 mb-1">
+                  Ou renseigner l&apos;URL d&apos;une image :
+                </label>
+                <input
+                  type="text"
+                  name="heroPhotoUrl"
+                  value={heroPhotoUrl}
+                  onChange={(e) => {
+                    setHeroPhotoUrl(e.target.value);
+                    setPhotoPreview(e.target.value || "/images/journalist-portrait.jpg");
+                  }}
+                  placeholder="https://... ou /images/portrait.jpg"
+                  className="w-full px-3 py-1.5 bg-neutral-950 border border-neutral-800 rounded-lg text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-brand-accent transition"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. CARTE MODULARITÉ NO-CODE : PILOTAGE DES SECTIONS DE LA VITRINE */}
       <div className="bg-gradient-to-r from-brand-secondary via-brand-primary to-neutral-900 border border-brand-accent/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 text-white">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-white/10 gap-3">
           <div className="flex items-center gap-3">
@@ -211,7 +487,7 @@ export default function WebsiteContentForm({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Colonne Principale */}
         <div className="lg:col-span-8 space-y-6">
-          {/* 2. CARTE TEASER & PROCHAIN PROJET */}
+          {/* 3. CARTE TEASER & PROCHAIN PROJET */}
           <div className="bg-neutral-900/70 border border-neutral-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-800/80">
               <div className="flex items-center gap-3">
@@ -248,54 +524,54 @@ export default function WebsiteContentForm({
                 <input
                   type="text"
                   name="teaserTitle"
-                  defaultValue={settings.teaserTitle || ""}
-                  placeholder="Ex : L'Or Vert des Caraïbes : Le Scandale des Terres Confisquées"
+                  defaultValue={settings.teaserTitle || initialContent.teaserTitle || ""}
+                  placeholder="L'Or Vert des Caraïbes..."
                   className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
                 />
               </div>
 
               <div className="sm:col-span-2">
                 <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
-                  Sous-titre / Phrase d&apos;Accroche Teaser
+                  Sous-titre / Accroche Sonore
                 </label>
                 <textarea
                   name="teaserSubtitle"
                   rows={2}
-                  defaultValue={settings.teaserSubtitle || ""}
-                  placeholder="Une enquête sonore exclusive en 4 épisodes sur les dépossessions foncières..."
-                  className="w-full p-3 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
+                  defaultValue={settings.teaserSubtitle || initialContent.teaserHook || ""}
+                  placeholder="Une enquête sonore exclusive en 4 épisodes..."
+                  className="w-full p-3.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition leading-relaxed"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
-                  Extrait Sonore / Trailer (URL MP3)
+                  Fichier Audio MP3 du Teaser (URL)
                 </label>
                 <input
                   type="url"
                   name="teaserAudioUrl"
                   defaultValue={settings.teaserAudioUrl || ""}
-                  placeholder="https://audio.local/trailers/teaser-ep1.mp3"
+                  placeholder="https://.../teaser.mp3"
                   className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
-                  Lien externe (Instagram, YouTube, Teaser vidéo)
+                  Lien Externe / Campagne (Instagram, Spotify...)
                 </label>
                 <input
                   type="url"
                   name="teaserExternalLink"
-                  defaultValue={settings.teaserExternalLink || "https://instagram.com/vlalesjournaleux"}
-                  placeholder="https://instagram.com/vlalesjournaleux"
+                  defaultValue={settings.teaserExternalLink || initialContent.teaserLinkUrl || ""}
+                  placeholder="https://instagram.com/..."
                   className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
                 />
               </div>
             </div>
           </div>
 
-          {/* 3. CARTE LECTEURS MULTIMÉDIAS EXTERNES (EMBEDS) */}
+          {/* 4. CARTE LECTEURS EXTERNES & EMBEDS */}
           <div className="bg-neutral-900/70 border border-neutral-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
             <div className="flex items-center gap-3 pb-3 border-b border-neutral-800/80">
               <div className="p-2.5 rounded-xl bg-brand-primary text-brand-accentLight border border-brand-accent/30">
@@ -360,7 +636,7 @@ export default function WebsiteContentForm({
             </div>
           </div>
 
-          {/* 4. CARTE MUSIQUE D'AMBIANCE & SMART AUDIO MUTE */}
+          {/* 5. CARTE MUSIQUE D'AMBIANCE & SMART AUDIO MUTE */}
           <div className="bg-neutral-900/70 border border-neutral-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-800/80">
               <div className="flex items-center gap-3">
@@ -425,7 +701,7 @@ export default function WebsiteContentForm({
             </div>
           </div>
 
-          {/* 5. CARTE MANIFESTE & BIO ÉDITORIALE */}
+          {/* 6. CARTE MANIFESTE & BIO ÉDITORIALE */}
           <div className="bg-neutral-900/70 border border-neutral-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
             <div className="flex items-center gap-3 pb-3 border-b border-neutral-800/80">
               <div className="p-2.5 rounded-xl bg-brand-accent/10 text-brand-accent border border-brand-accent/20">
@@ -433,10 +709,10 @@ export default function WebsiteContentForm({
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white tracking-tight">
-                  Manifeste & Biographie Éditoriale (Section #bio)
+                  Titre du Manifeste & Charte Éditoriale (Section #bio)
                 </h3>
                 <p className="text-xs text-neutral-400">
-                  Présentation de votre démarche, de vos valeurs déontologiques et de votre méthode d&apos;investigation.
+                  Le titre mis en avant au-dessus de votre démarche journalistique.
                 </p>
               </div>
             </div>
@@ -457,11 +733,11 @@ export default function WebsiteContentForm({
 
               <div>
                 <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
-                  Texte Complet du Manifeste (Sauts de lignes préservés)
+                  Texte Détaillé du Manifeste (Optionnel si renseigné dans Hero)
                 </label>
                 <textarea
                   name="bioText"
-                  rows={6}
+                  rows={4}
                   defaultValue={settings.bioText || initialContent.bioText}
                   placeholder="Diplômée de l'Institut Français de Presse..."
                   className="w-full p-4 bg-neutral-950 border border-neutral-800 rounded-xl text-xs font-mono text-neutral-200 leading-relaxed placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
@@ -471,46 +747,8 @@ export default function WebsiteContentForm({
           </div>
         </div>
 
-        {/* Colonne Latérale : Accroche Hero & Coordonnées */}
+        {/* Colonne Latérale : Coordonnées & Réseaux */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Card Hero Header */}
-          <div className="bg-neutral-900/70 border border-neutral-800 rounded-3xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-neutral-800/80 text-white font-bold text-sm">
-              <Edit3 className="w-4 h-4 text-brand-accent" />
-              <span>Accroche Hero d&apos;Accueil</span>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-300 uppercase tracking-wider mb-1.5">
-                  Titre H1 *
-                </label>
-                <input
-                  type="text"
-                  name="heroTitle"
-                  required
-                  defaultValue={initialContent.heroTitle}
-                  onChange={(e) => setPreviewTitle(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-300 uppercase tracking-wider mb-1.5">
-                  Sous-titre *
-                </label>
-                <textarea
-                  name="heroSubtitle"
-                  required
-                  rows={3}
-                  defaultValue={initialContent.heroSubtitle}
-                  onChange={(e) => setPreviewSubtitle(e.target.value)}
-                  className="w-full p-3 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200"
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Card Contact Public */}
           <div className="bg-neutral-900/70 border border-neutral-800 rounded-3xl p-6 shadow-xl space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-neutral-800/80 text-white font-bold text-sm">
@@ -569,6 +807,17 @@ export default function WebsiteContentForm({
                 className="w-full px-3 py-1.5 bg-neutral-950 border border-neutral-800 rounded-lg text-xs text-white"
               />
             </div>
+          </div>
+
+          {/* Information synchro Neon */}
+          <div className="p-5 rounded-3xl bg-brand-primary/40 border border-brand-accent/20 space-y-2 text-xs text-neutral-300">
+            <div className="font-bold text-white flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-brand-accentLight" />
+              <span>Publication Instantanée</span>
+            </div>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              Toutes les modifications enregistrées ici sont sauvegardées dans votre base Neon et visibles immédiatement sur le site vitrine sans redéploiement.
+            </p>
           </div>
         </div>
       </div>

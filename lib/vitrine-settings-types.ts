@@ -1,5 +1,12 @@
 export interface VitrineSettingsData {
   id?: string;
+  heroJournalistName?: string | null;
+  heroSubtitle?: string | null;
+  heroTitle?: string | null;
+  heroBio?: string | null;
+  heroPhotoUrl?: string | null;
+  heroBadgeStatus?: string | null;
+  heroCaption?: string | null;
   showTeaserBanner: boolean;
   teaserTitle?: string | null;
   teaserSubtitle?: string | null;
@@ -21,6 +28,17 @@ export interface VitrineSettingsData {
 }
 
 export const DEFAULT_VITRINE_SETTINGS: VitrineSettingsData = {
+  heroJournalistName: "Peggy SAINT-VILLE",
+  heroSubtitle: "Studio de Production & Rédaction d'Investigation Sonore",
+  heroTitle: "Révéler le réel : journalisme d'investigation, podcasts et récits engagés.",
+  heroBio: `Diplômée de l'Institut Français de Presse et passée par les rédactions de radio publique, j'ai forgé ma pratique journalistique au contact direct du terrain.
+
+Mon travail s'articule autour de l'investigation sociale, des mutations économiques, des bouleversements technologiques et de la géopolitique des ressources. L'audio permet une intimité et une authenticité rares : il restitue l'hésitation, la vérité d'une voix humaine et l'atmosphère brute d'un lieu d'enquête.
+
+Membre de collectifs internationaux de journalistes d'investigation, je mène chaque projet dans le strict respect de la déontologie et de la protection des sources.`,
+  heroPhotoUrl: "/images/journalist-portrait.jpg",
+  heroBadgeStatus: "En production active",
+  heroCaption: "En direct de la rédaction centrale",
   showTeaserBanner: true,
   teaserTitle: "L'Or Vert des Caraïbes : Le Scandale des Terres Confisquées",
   teaserSubtitle:
