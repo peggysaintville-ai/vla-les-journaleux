@@ -92,7 +92,49 @@ export async function updateWebsiteContentAction(
     const showTeaserBanner = formData.get("showTeaserBanner") === "on" || formData.get("showTeaserBanner") === "true";
     const teaserTitle = (formData.get("teaserTitle") as string)?.trim() || null;
     const teaserSubtitle = (formData.get("teaserSubtitle") as string)?.trim() || null;
-    const teaserAudioUrl = (formData.get("teaserAudioUrl") as string)?.trim() || null;
+    let teaserAudioUrl = (formData.get("teaserAudioUrl") as string)?.trim() || null;
+    const teaserAudioFile = formData.get("teaserAudioFile") as File | null;
+
+    if (teaserAudioFile && teaserAudioFile.size > 0 && typeof teaserAudioFile.arrayBuffer === "function") {
+      try {
+        const bytes = await teaserAudioFile.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const uploadsDir = path.join(process.cwd(), "public", "uploads");
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const cleanName = teaserAudioFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const fileName = `teaser-${Date.now()}-${cleanName}`;
+        fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+        teaserAudioUrl = `/uploads/${fileName}`;
+      } catch (uploadErr) {
+        console.warn("Erreur sauvegarde upload audio teaser :", uploadErr);
+      }
+    } else if (teaserAudioUrl && teaserAudioUrl.startsWith("data:audio/")) {
+      try {
+        const matches = teaserAudioUrl.match(/^data:audio\/([a-zA-Z0-9.-]+);base64,(.+)$/);
+        if (matches) {
+          let ext = matches[1];
+          if (ext === "mpeg" || ext === "mp3") ext = "mp3";
+          else if (ext === "x-m4a" || ext === "m4a") ext = "m4a";
+          else if (ext === "wav" || ext === "x-wav") ext = "wav";
+          else if (ext.includes("ogg")) ext = "ogg";
+          else ext = "mp3";
+          const data = matches[2];
+          const buffer = Buffer.from(data, "base64");
+          const uploadsDir = path.join(process.cwd(), "public", "uploads");
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+          const fileName = `teaser-audio-${Date.now()}.${ext}`;
+          fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+          teaserAudioUrl = `/uploads/${fileName}`;
+        }
+      } catch (diskErr) {
+        console.warn("Stockage direct de la Data URL audio en base Neon (fallback serverless) :", diskErr);
+      }
+    }
+
     const teaserExternalLink = (formData.get("teaserExternalLink") as string)?.trim() || null;
     const teaserBadge = (formData.get("teaserBadge") as string)?.trim() || "Bientôt disponible";
     const rawTeaserDate = formData.get("teaserReleaseDate") as string;

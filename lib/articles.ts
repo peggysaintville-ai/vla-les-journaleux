@@ -6,6 +6,7 @@ export interface ArticleItem {
   slug: string;
   excerpt: string | null;
   content: string;
+  category?: string | null;
   coverImage?: string | null;
   isPublished: boolean;
   publishedAt?: Date | null;
@@ -19,6 +20,7 @@ let localArticlesStore: ArticleItem[] = [
     id: "art-1",
     title: "Dans les coulisses des cabinets de conseil : 18 mois d'investigation financière",
     slug: "coulisses-cabinets-conseil-investigation-financiere",
+    category: "Investigation Financière",
     excerpt: "Comment les multinationales du conseil ont privatisé des pans entiers de la décision publique. Documents inédits et témoignages exclusifs sous anonymat.",
     content: `## L'engrenage feutré de la sous-traitance d'État
 
@@ -42,6 +44,7 @@ Au-delà des montants financiers colossaux engagés sur les deniers publics, c'e
     id: "art-2",
     title: "Cyberguerre et fermes à trolls : autopsie d'une campagne de déstabilisation électorale",
     slug: "cyberguerre-fermes-a-trolls-destabilisation-electorale",
+    category: "Société & Numérique",
     excerpt: "Infiltration d'un réseau international de désinformation coordonnée utilisant des modèles de langage automatisés pour saturer l'espace médiatique francophone.",
     content: `## 48 heures au cœur de la machine à viralité
 
@@ -65,6 +68,7 @@ Cette enquête a nécessité :
     id: "art-3",
     title: "Transition écologique ou mirage vert ? Le grand dossier sur les quotas carbone",
     slug: "transition-ecologique-mirage-vert-quotas-carbone",
+    category: "Environnement",
     excerpt: "Brouillon en cours d'écriture : analyse des crédits carbone forestiers vendus à des compagnies aériennes internationales.",
     content: `## Enquête de terrain en Amérique du Sud et en Afrique centrale
 
@@ -91,6 +95,7 @@ export async function getArticles(includeUnpublished = false): Promise<ArticleIt
         slug: a.slug,
         excerpt: a.excerpt || "",
         content: a.content,
+        category: a.category || "Investigation",
         coverImage: a.coverImage,
         isPublished: a.isPublished,
         publishedAt: a.publishedAt,
@@ -119,6 +124,7 @@ export async function getArticleBySlug(slug: string): Promise<ArticleItem | null
         slug: article.slug,
         excerpt: article.excerpt || "",
         content: article.content,
+        category: article.category || "Investigation",
         coverImage: article.coverImage,
         isPublished: article.isPublished,
         publishedAt: article.publishedAt,
@@ -140,6 +146,7 @@ export async function saveArticle(data: {
   slug: string;
   excerpt: string;
   content: string;
+  category?: string;
   coverImage?: string;
   isPublished: boolean;
 }): Promise<ArticleItem> {
@@ -154,6 +161,7 @@ export async function saveArticle(data: {
           slug: data.slug,
           excerpt: data.excerpt,
           content: data.content,
+          category: data.category || "Investigation",
           coverImage: data.coverImage,
           isPublished: data.isPublished,
           publishedAt: data.isPublished ? publishedAt || new Date() : null,
@@ -167,6 +175,7 @@ export async function saveArticle(data: {
           slug: data.slug,
           excerpt: data.excerpt,
           content: data.content,
+          category: data.category || "Investigation",
           coverImage: data.coverImage,
           isPublished: data.isPublished,
           publishedAt,
@@ -187,6 +196,7 @@ export async function saveArticle(data: {
         slug: data.slug,
         excerpt: data.excerpt,
         content: data.content,
+        category: data.category || "Investigation",
         coverImage: data.coverImage || null,
         isPublished: data.isPublished,
         publishedAt: data.isPublished ? localArticlesStore[idx].publishedAt || new Date() : null,
@@ -202,6 +212,7 @@ export async function saveArticle(data: {
     slug: data.slug,
     excerpt: data.excerpt,
     content: data.content,
+    category: data.category || "Investigation",
     coverImage: data.coverImage || null,
     isPublished: data.isPublished,
     publishedAt,

@@ -11,6 +11,7 @@ const articleSchema = z.object({
     .string()
     .min(3, "Le slug doit contenir au moins 3 caractères")
     .regex(/^[a-z0-9-]+$/, "Le slug ne doit comporter que des lettres minuscules, chiffres et tirets"),
+  category: z.string().default("Investigation"),
   excerpt: z.string().min(5, "L'extrait doit contenir au moins 5 caractères"),
   content: z.string().min(10, "Le contenu doit contenir au moins 10 caractères"),
   coverImage: z.string().optional(),
@@ -21,6 +22,7 @@ export async function saveArticleAction(prevState: unknown, formData: FormData) 
   const rawId = formData.get("id")?.toString();
   const rawTitle = formData.get("title")?.toString() || "";
   let rawSlug = formData.get("slug")?.toString() || "";
+  const rawCategory = formData.get("category")?.toString() || "Investigation";
   const rawExcerpt = formData.get("excerpt")?.toString() || "";
   const rawContent = formData.get("content")?.toString() || "";
   const rawCoverImage = formData.get("coverImage")?.toString();
@@ -39,6 +41,7 @@ export async function saveArticleAction(prevState: unknown, formData: FormData) 
     id: rawId || undefined,
     title: rawTitle,
     slug: rawSlug,
+    category: rawCategory,
     excerpt: rawExcerpt,
     content: rawContent,
     coverImage: rawCoverImage || undefined,

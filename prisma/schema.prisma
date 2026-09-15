@@ -203,7 +203,8 @@ model CalendarEvent {
   endDate     DateTime
   location    String?
   allDay      Boolean   @default(false)
-  eventType   String?   // ex: TOURNAGE, ENREGISTREMENT, INTERVIEW, RDV_CLIENT
+  eventType   String?   // ex: TOURNAGE, ENREGISTREMENT, INTERVIEW, RDV_CLIENT, DIRECT, MONTAGE
+  status      String?   @default("PLANIFIE") // PLANIFIE, CONFIRME, EN_COURS, TERMINE, ANNULE
   userId      String?
   user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt   DateTime  @default(now())
@@ -264,6 +265,7 @@ model Article {
   slug        String    @unique
   excerpt     String?
   content     String
+  category    String?   @default("Investigation")
   coverImage  String?
   isPublished Boolean   @default(false)
   publishedAt DateTime?

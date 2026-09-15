@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, ExternalLink, Calendar, Radio } from "lucide-react";
+import { ExternalLink, Calendar, Radio } from "lucide-react";
 
 function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -26,6 +26,7 @@ interface PublicTeaserBannerProps {
     teaserBadge?: string | null;
     teaserTitle?: string | null;
     teaserHook?: string | null;
+    teaserAudioUrl?: string | null;
     teaserLinkUrl?: string | null;
     teaserLinkLabel?: string | null;
     teaserReleaseDate?: Date | string | null;
@@ -87,6 +88,17 @@ export default function PublicTeaserBanner({ teaser }: PublicTeaserBannerProps) 
               <p className="text-sm sm:text-base text-brand-cream/85 mt-1.5 leading-relaxed">
                 {teaser.teaserHook}
               </p>
+            )}
+
+            {teaser.teaserAudioUrl && (
+              <div className="pt-2">
+                <audio
+                  controls
+                  src={teaser.teaserAudioUrl}
+                  className="w-full max-w-md h-8 accent-brand-accent rounded-lg"
+                  preload="none"
+                />
+              </div>
             )}
           </div>
         </div>

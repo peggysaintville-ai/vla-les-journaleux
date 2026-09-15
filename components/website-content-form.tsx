@@ -103,6 +103,12 @@ export default function WebsiteContentForm({
   const [videoUrlPreview, setVideoUrlPreview] = useState(settings.videoUrl || "");
   const [audioEmbedPreview, setAudioEmbedPreview] = useState(settings.audioEmbedUrl || "");
 
+  // État de l'extrait audio / teaser
+  const [teaserAudioUrl, setTeaserAudioUrl] = useState<string>(settings.teaserAudioUrl || "");
+  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
+  const [audioStatusMessage, setAudioStatusMessage] = useState<string | null>(null);
+  const audioFileInputRef = useRef<HTMLInputElement>(null);
+
   // Interrupteurs d'état local pour aperçu visuel dynamique
   const [showTeaser, setShowTeaser] = useState(settings.showTeaserBanner);
   const [showAudioBg, setShowAudioBg] = useState(settings.showAudioBackground);
@@ -110,6 +116,31 @@ export default function WebsiteContentForm({
   const [showArticles, setShowArticles] = useState(settings.showArticlesSection);
   const [showBio, setShowBio] = useState(settings.showBioSection);
   const [showContact, setShowContact] = useState(settings.showContactSection);
+
+  // Traitement du fichier audio téléversé
+  const handleAudioFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessingAudio(true);
+    setAudioStatusMessage("Lecture et encodage du fichier audio...");
+
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      const result = readerEvent.target?.result as string;
+      if (result) {
+        setTeaserAudioUrl(result);
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+        setAudioStatusMessage(`Extrait audio "${file.name}" prêt (${sizeMb} Mo)`);
+      }
+      setIsProcessingAudio(false);
+    };
+    reader.onerror = () => {
+      setIsProcessingAudio(false);
+      setAudioStatusMessage("Erreur lors de la lecture du fichier audio.");
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Traitement et compression côté client de l'image sélectionnée
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -740,17 +771,100 @@ export default function WebsiteContentForm({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
-                  Fichier Audio MP3 du Teaser (URL)
-                </label>
-                <input
-                  type="url"
-                  name="teaserAudioUrl"
-                  defaultValue={settings.teaserAudioUrl || ""}
-                  placeholder="https://.../teaser.mp3"
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
-                />
+              <div className="sm:col-span-2 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                    <Volume2 className="w-3.5 h-3.5 text-brand-accentLight" />
+                    <span>Extrait sonore / Trailer (URL MP3 ou fichier audio)</span>
+                  </label>
+                  {teaserAudioUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTeaserAudioUrl("");
+                        setAudioStatusMessage(null);
+                        if (audioFileInputRef.current) audioFileInputRef.current.value = "";
+                      }}
+                      className="text-[11px] text-neutral-400 hover:text-rose-400 flex items-center gap-1 transition cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Retirer l&apos;extrait</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Input caché soumis au serveur */}
+                <input type="hidden" name="teaserAudioUrl" value={teaserAudioUrl} />
+
+                {/* Bouton d'upload direct et champ d'URL */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <input
+                      ref={audioFileInputRef}
+                      type="file"
+                      accept=".mp3,.wav,.m4a,audio/*"
+                      onChange={handleAudioFileSelect}
+                      className="hidden"
+                      id="teaserAudioFileInput"
+                      disabled={isProcessingAudio}
+                    />
+                    <label
+                      htmlFor="teaserAudioFileInput"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-primary/80 hover:bg-brand-secondary text-brand-cream hover:text-white border border-brand-accent/40 text-xs font-bold cursor-pointer transition shadow-md"
+                    >
+                      {isProcessingAudio ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Traitement audio en cours...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 text-brand-accentLight" />
+                          <span>Uploader un fichier audio (.mp3, .wav, .m4a)</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      value={teaserAudioUrl.startsWith("data:") ? "" : teaserAudioUrl}
+                      onChange={(e) => setTeaserAudioUrl(e.target.value)}
+                      placeholder={teaserAudioUrl.startsWith("data:") ? "Fichier audio encodé prêt" : "Ou coller une URL https://.../teaser.mp3"}
+                      className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
+                    />
+                  </div>
+                </div>
+
+                {/* Message d'état de l'upload audio */}
+                {audioStatusMessage && (
+                  <div className="text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{audioStatusMessage}</span>
+                  </div>
+                )}
+
+                {/* Lecteur audio de pré-écoute en direct */}
+                {teaserAudioUrl && (
+                  <div className="p-3.5 rounded-2xl bg-neutral-950/90 border border-brand-accent/30 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-white flex items-center gap-1.5">
+                        <Music className="w-3.5 h-3.5 text-brand-accent" />
+                        <span>Pré-écoute du trailer en direct</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                        Prêt pour diffusion
+                      </span>
+                    </div>
+                    <audio
+                      controls
+                      src={teaserAudioUrl}
+                      className="w-full h-8 accent-brand-accent"
+                      preload="metadata"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>

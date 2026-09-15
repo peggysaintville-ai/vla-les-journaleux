@@ -65,7 +65,7 @@ export default async function PublicArticlePage({ params }: Props) {
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
               <span className="px-3 py-1 rounded-full bg-brand-primary border border-brand-accent/40 text-brand-accentLight text-xs font-bold uppercase tracking-wider">
-                Investigation Exclusive
+                {article.category || "Investigation Exclusive"}
               </span>
               <div className="flex items-center gap-1.5 text-xs text-neutral-400 font-mono">
                 <Calendar className="w-3.5 h-3.5" />

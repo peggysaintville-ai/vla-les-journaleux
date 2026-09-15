@@ -63,6 +63,7 @@ export default async function PublicShowcasePage() {
                 teaserEnabled: true,
                 teaserTitle: vitrineSettings.teaserTitle || websiteContent.teaserTitle,
                 teaserHook: vitrineSettings.teaserSubtitle || websiteContent.teaserHook,
+                teaserAudioUrl: vitrineSettings.teaserAudioUrl || null,
                 teaserLinkUrl: vitrineSettings.teaserExternalLink || websiteContent.teaserLinkUrl,
                 teaserBadge: "Bientôt disponible",
                 teaserReleaseDate: websiteContent.teaserReleaseDate,
@@ -357,7 +358,7 @@ export default async function PublicShowcasePage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between text-xs">
                       <span className="px-2.5 py-1 rounded-full bg-brand-primary text-brand-accentLight text-[11px] font-mono font-bold uppercase tracking-wider border border-brand-accent/30">
-                        Investigation
+                        {art.category || "Investigation"}
                       </span>
                       <div className="flex items-center gap-1.5 text-neutral-500 font-mono">
                         <Calendar className="w-3.5 h-3.5" />
