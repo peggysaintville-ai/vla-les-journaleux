@@ -50,7 +50,7 @@ Membre de collectifs internationaux de journalistes d'investigation, je mène ch
   videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   audioEmbedUrl: "https://open.spotify.com/embed/episode/7makk4oTQel546B0PZlDM5",
   showAudioBackground: false,
-  audioBackgroundUrl: "https://actions.google.com/sounds/v1/ambiences/humming_room_tone.ogg",
+  audioBackgroundUrl: "/audio/ambient-studio.wav",
   audioBackgroundTitle: "Ambiance Studio d'Investigation (432 Hz)",
   showPodcastsSection: true,
   showArticlesSection: true,

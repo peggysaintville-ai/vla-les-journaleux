@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, useRef } from "react";
+import { upload } from "@vercel/blob/client";
 import type { WebsiteContentData } from "@/lib/website-content";
 import { VitrineSettingsData, DEFAULT_VITRINE_SETTINGS } from "@/lib/vitrine-settings-types";
 import { updateWebsiteContentAction } from "@/app/(app)/site-vitrine/actions";
@@ -107,14 +108,16 @@ export default function WebsiteContentForm({
   const [teaserAudioUrl, setTeaserAudioUrl] = useState<string>(settings.teaserAudioUrl || "");
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   const [audioStatusMessage, setAudioStatusMessage] = useState<string | null>(null);
+  const [teaserUploadProgress, setTeaserUploadProgress] = useState<number | null>(null);
   const audioFileInputRef = useRef<HTMLInputElement>(null);
 
   // État de la musique d'ambiance
   const [audioBackgroundUrl, setAudioBackgroundUrl] = useState<string>(
-    settings.audioBackgroundUrl || "https://actions.google.com/sounds/v1/ambiences/humming_room_tone.ogg"
+    settings.audioBackgroundUrl || "/audio/ambient-studio.wav"
   );
   const [isProcessingAmbiance, setIsProcessingAmbiance] = useState(false);
   const [ambianceStatusMessage, setAmbianceStatusMessage] = useState<string | null>(null);
+  const [ambianceUploadProgress, setAmbianceUploadProgress] = useState<number | null>(null);
   const ambianceFileInputRef = useRef<HTMLInputElement>(null);
 
   // Interrupteurs d'état local pour aperçu visuel dynamique
@@ -125,54 +128,104 @@ export default function WebsiteContentForm({
   const [showBio, setShowBio] = useState(settings.showBioSection);
   const [showContact, setShowContact] = useState(settings.showContactSection);
 
-  // Traitement du fichier audio téléversé
-  const handleAudioFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Traitement et upload direct vers Vercel Blob du teaser audio
+  const handleAudioFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsProcessingAudio(true);
-    setAudioStatusMessage("Lecture et encodage du fichier audio...");
+    setTeaserUploadProgress(0);
+    setAudioStatusMessage(`Téléversement de "${file.name}" vers Vercel Blob...`);
 
-    const reader = new FileReader();
-    reader.onload = (readerEvent) => {
-      const result = readerEvent.target?.result as string;
-      if (result) {
-        setTeaserAudioUrl(result);
-        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-        setAudioStatusMessage(`Extrait audio "${file.name}" prêt (${sizeMb} Mo)`);
-      }
+    try {
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+        onUploadProgress: (progress) => {
+          setTeaserUploadProgress(progress.percentage);
+          setAudioStatusMessage(`Téléversement vers Vercel Blob : ${progress.percentage}%`);
+        },
+      });
+
+      setTeaserAudioUrl(blob.url);
+      setTeaserUploadProgress(100);
+      setAudioStatusMessage(`Extrait audio hébergé avec succès sur Vercel Blob !`);
+    } catch (err: any) {
+      console.error("Erreur upload Vercel Blob teaser :", err);
+      // Fallback local en cas d'absence de configuration Blob en environnement de dev
+      setAudioStatusMessage("Upload Blob indisponible, conversion locale en cours...");
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        const result = readerEvent.target?.result as string;
+        if (result) {
+          setTeaserAudioUrl(result);
+          const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+          setAudioStatusMessage(`Extrait audio encodé localement (${file.name}, ${sizeMb} Mo)`);
+        }
+        setIsProcessingAudio(false);
+        setTeaserUploadProgress(null);
+      };
+      reader.onerror = () => {
+        setIsProcessingAudio(false);
+        setTeaserUploadProgress(null);
+        setAudioStatusMessage("Erreur lors de la lecture du fichier audio.");
+      };
+      reader.readAsDataURL(file);
+      return;
+    } finally {
       setIsProcessingAudio(false);
-    };
-    reader.onerror = () => {
-      setIsProcessingAudio(false);
-      setAudioStatusMessage("Erreur lors de la lecture du fichier audio.");
-    };
-    reader.readAsDataURL(file);
+      setTimeout(() => setTeaserUploadProgress(null), 3000);
+    }
   };
 
-  // Traitement du fichier audio d'ambiance téléversé
-  const handleAmbianceFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Traitement et upload direct vers Vercel Blob de la musique d'ambiance
+  const handleAmbianceFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsProcessingAmbiance(true);
-    setAmbianceStatusMessage("Lecture et encodage de la musique d'ambiance...");
+    setAmbianceUploadProgress(0);
+    setAmbianceStatusMessage(`Téléversement de "${file.name}" vers Vercel Blob...`);
 
-    const reader = new FileReader();
-    reader.onload = (readerEvent) => {
-      const result = readerEvent.target?.result as string;
-      if (result) {
-        setAudioBackgroundUrl(result);
-        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-        setAmbianceStatusMessage(`Piste audio "${file.name}" prête (${sizeMb} Mo)`);
-      }
+    try {
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+        onUploadProgress: (progress) => {
+          setAmbianceUploadProgress(progress.percentage);
+          setAmbianceStatusMessage(`Téléversement vers Vercel Blob : ${progress.percentage}%`);
+        },
+      });
+
+      setAudioBackgroundUrl(blob.url);
+      setAmbianceUploadProgress(100);
+      setAmbianceStatusMessage(`Musique d'ambiance hébergée avec succès sur Vercel Blob !`);
+    } catch (err: any) {
+      console.error("Erreur upload Vercel Blob ambiance :", err);
+      // Fallback local en cas d'absence de configuration Blob en environnement de dev
+      setAmbianceStatusMessage("Upload Blob indisponible, conversion locale en cours...");
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        const result = readerEvent.target?.result as string;
+        if (result) {
+          setAudioBackgroundUrl(result);
+          const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+          setAmbianceStatusMessage(`Piste audio encodée localement (${file.name}, ${sizeMb} Mo)`);
+        }
+        setIsProcessingAmbiance(false);
+        setAmbianceUploadProgress(null);
+      };
+      reader.onerror = () => {
+        setIsProcessingAmbiance(false);
+        setAmbianceUploadProgress(null);
+        setAmbianceStatusMessage("Erreur lors de la lecture du fichier audio.");
+      };
+      reader.readAsDataURL(file);
+      return;
+    } finally {
       setIsProcessingAmbiance(false);
-    };
-    reader.onerror = () => {
-      setIsProcessingAmbiance(false);
-      setAmbianceStatusMessage("Erreur lors de la lecture du fichier audio.");
-    };
-    reader.readAsDataURL(file);
+      setTimeout(() => setAmbianceUploadProgress(null), 3000);
+    }
   };
 
   // Traitement et compression côté client de l'image sélectionnée
@@ -870,7 +923,22 @@ export default function WebsiteContentForm({
                   </div>
                 </div>
 
-                {/* Message d'état de l'upload audio */}
+                {/* Message d'état et barre de progression de l'upload audio */}
+                {teaserUploadProgress !== null && (
+                  <div className="space-y-1.5 p-3 rounded-xl bg-neutral-950/80 border border-brand-accent/30">
+                    <div className="flex items-center justify-between text-[11px] text-brand-accentLight font-mono">
+                      <span>Progression de l&apos;envoi vers Vercel Blob</span>
+                      <span>{teaserUploadProgress}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-neutral-900 rounded-full overflow-hidden border border-brand-accent/20">
+                      <div
+                        className="h-full bg-gradient-to-r from-brand-accent to-emerald-400 transition-all duration-300 ease-out"
+                        style={{ width: `${teaserUploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {audioStatusMessage && (
                   <div className="text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
@@ -1033,7 +1101,7 @@ export default function WebsiteContentForm({
                     <button
                       type="button"
                       onClick={() => {
-                        setAudioBackgroundUrl("https://actions.google.com/sounds/v1/ambiences/humming_room_tone.ogg");
+                        setAudioBackgroundUrl("/audio/ambient-studio.wav");
                         setAmbianceStatusMessage("Piste d'ambiance réinitialisée par défaut");
                         if (ambianceFileInputRef.current) ambianceFileInputRef.current.value = "";
                       }}
@@ -1090,7 +1158,22 @@ export default function WebsiteContentForm({
                   </div>
                 </div>
 
-                {/* Message d'état */}
+                {/* Message d'état et barre de progression de la musique d'ambiance */}
+                {ambianceUploadProgress !== null && (
+                  <div className="space-y-1.5 p-3 rounded-xl bg-neutral-950/80 border border-indigo-500/30">
+                    <div className="flex items-center justify-between text-[11px] text-indigo-300 font-mono">
+                      <span>Progression de l&apos;envoi vers Vercel Blob</span>
+                      <span>{ambianceUploadProgress}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-neutral-900 rounded-full overflow-hidden border border-indigo-500/20">
+                      <div
+                        className="h-full bg-gradient-to-r from-indigo-500 to-brand-accent transition-all duration-300 ease-out"
+                        style={{ width: `${ambianceUploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {ambianceStatusMessage && (
                   <div className="text-[11px] text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-indigo-400" />

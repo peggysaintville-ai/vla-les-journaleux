@@ -5,8 +5,7 @@ import { Volume2, VolumeX, Sparkles, Radio } from "lucide-react";
 import { onSmartAudioPause, onSmartAudioResume } from "@/lib/smart-audio-sync";
 
 // Piste d'ambiance sonore feutrée d'investigation
-const DEFAULT_AMBIENT_TRACK_URL =
-  "https://actions.google.com/sounds/v1/ambiences/humming_room_tone.ogg";
+const DEFAULT_AMBIENT_TRACK_URL = "/audio/ambient-studio.wav";
 
 interface BackgroundAudioProps {
   enabled?: boolean;
