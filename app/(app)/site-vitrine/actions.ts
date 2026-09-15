@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
-import { updateWebsiteContent, WebsiteContentData } from "@/lib/website-content";
-import { updateVitrineSettings, VitrineSettingsData } from "@/lib/vitrine-settings";
+import { getWebsiteContent, updateWebsiteContent, WebsiteContentData } from "@/lib/website-content";
+import { getVitrineSettings, updateVitrineSettings, VitrineSettingsData } from "@/lib/vitrine-settings";
 import { put, getDownloadUrl } from "@vercel/blob";
 
 export interface WebsiteContentActionResult {
@@ -21,6 +21,9 @@ export async function updateWebsiteContentAction(
     if (!user) {
       return { error: "Session non authentifiée. Veuillez vous reconnecter." };
     }
+
+    // Récupération des réglages existants pour préserver les valeurs non modifiées
+    const currentSettings = await getVitrineSettings().catch(() => null);
 
     // 0. Identité & Présentation Hero du Journaliste
     const heroJournalistName = (formData.get("heroJournalistName") as string)?.trim() || "Peggy SAINT-VILLE";
@@ -116,19 +119,42 @@ export async function updateWebsiteContentAction(
     const showBioSection = formData.get("showBioSection") === "on" || formData.get("showBioSection") === "true";
     const showContactSection = formData.get("showContactSection") === "on" || formData.get("showContactSection") === "true";
 
-    // 5. Section Soutien & Dons
-    const donationEnabled = formData.get("donationEnabled") === "on" || formData.get("donationEnabled") === "true";
-    const donationTitle = (formData.get("donationTitle") as string)?.trim() || "Soutenir notre journalisme indépendant";
-    const donationSubtitle = (formData.get("donationSubtitle") as string)?.trim() || "Aidez-nous à financer nos enquêtes et nos podcasts de terrain en toute liberté.";
-    
-    const rawDonationDescription = (formData.get("donationDescription") as string)?.trim();
-    const donationDescription = rawDonationDescription && rawDonationDescription.length > 0
-      ? rawDonationDescription
-      : "Chaque enquête approfondie nécessite des semaines de recherche documentaire, de déplacements sur le terrain et de vérification rigoureuse des sources.\n\nEn contribuant financièrement à notre studio, vous garantissez notre totale indépendance vis-à-vis des puissances économiques et politiques. Vos dons financent directement la production d'épisodes en accès libre et la protection de nos informateurs.";
+    // 5. Section Soutien & Dons (Préservation stricte des valeurs existantes si non modifiées)
+    const rawDonationEnabled = formData.get("donationEnabled");
+    const donationEnabled = rawDonationEnabled !== null
+      ? (rawDonationEnabled === "on" || rawDonationEnabled === "true")
+      : (currentSettings?.donationEnabled ?? true);
 
-    const donationUrl = (formData.get("donationUrl") as string)?.trim() || "https://donate.stripe.com/demo";
-    const donationButtonText = (formData.get("donationButtonText") as string)?.trim() || "Faire un don libre";
-    let donationImageUrl = (formData.get("donationImageUrl") as string)?.trim() || null;
+    const rawDonationTitle = formData.get("donationTitle");
+    const donationTitle = rawDonationTitle !== null && typeof rawDonationTitle === "string" && rawDonationTitle.trim().length > 0
+      ? rawDonationTitle.trim()
+      : (currentSettings?.donationTitle || "Soutenir notre journalisme indépendant");
+
+    const rawDonationSubtitle = formData.get("donationSubtitle");
+    const donationSubtitle = rawDonationSubtitle !== null && typeof rawDonationSubtitle === "string" && rawDonationSubtitle.trim().length > 0
+      ? rawDonationSubtitle.trim()
+      : (currentSettings?.donationSubtitle || "Aidez-nous à financer nos enquêtes et nos podcasts de terrain en toute liberté.");
+
+    const rawDonationDescription = formData.get("donationDescription");
+    const donationDescription = rawDonationDescription !== null && typeof rawDonationDescription === "string" && rawDonationDescription.trim().length > 0
+      ? rawDonationDescription.trim()
+      : (currentSettings?.donationDescription || "Chaque enquête approfondie nécessite des semaines de recherche documentaire, de déplacements sur le terrain et de vérification rigoureuse des sources.\n\nEn contribuant financièrement à notre studio, vous garantissez notre totale indépendance vis-à-vis des puissances économiques et politiques. Vos dons financent directement la production d'épisodes en accès libre et la protection de nos informateurs.");
+
+    const rawDonationUrl = formData.get("donationUrl");
+    const donationUrl = rawDonationUrl !== null && typeof rawDonationUrl === "string" && rawDonationUrl.trim().length > 0
+      ? rawDonationUrl.trim()
+      : (currentSettings?.donationUrl || "https://donate.stripe.com/demo");
+
+    const rawDonationButtonText = formData.get("donationButtonText");
+    const donationButtonText = rawDonationButtonText !== null && typeof rawDonationButtonText === "string" && rawDonationButtonText.trim().length > 0
+      ? rawDonationButtonText.trim()
+      : (currentSettings?.donationButtonText || "Faire un don libre");
+
+    const rawDonationImageUrl = formData.get("donationImageUrl");
+    let donationImageUrl = rawDonationImageUrl !== null && typeof rawDonationImageUrl === "string" && rawDonationImageUrl.trim().length > 0
+      ? rawDonationImageUrl.trim()
+      : (currentSettings?.donationImageUrl || null);
+
     const donationImageFile = formData.get("donationImageFile") as File | null;
 
     if (donationImageFile && donationImageFile.size > 0 && typeof donationImageFile.arrayBuffer === "function") {
@@ -144,7 +170,7 @@ export async function updateWebsiteContentAction(
     }
 
     if (!donationImageUrl) {
-      donationImageUrl = "/images/journalist-portrait.jpg";
+      donationImageUrl = currentSettings?.donationImageUrl || "/images/journalist-portrait.jpg";
     }
 
     // Mise à jour de VitrineSettings dans la base Neon
@@ -206,9 +232,9 @@ export async function updateWebsiteContentAction(
     });
 
     // Revalidation immédiate de la vitrine publique et du CMS
-    revalidatePath("/");
-    revalidatePath("/site-vitrine");
-    revalidatePath("/dashboard");
+    revalidatePath("/", "page");
+    revalidatePath("/site-vitrine", "page");
+    revalidatePath("/dashboard", "page");
 
     return {
       success: true,

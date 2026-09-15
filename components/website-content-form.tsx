@@ -132,22 +132,22 @@ export default function WebsiteContentForm({
 
   // État de la section Soutien & Dons
   const [donationEnabled, setDonationEnabled] = useState(
-    settings.donationEnabled !== undefined ? settings.donationEnabled : true
+    settings.donationEnabled ?? true
   );
   const [donationTitle, setDonationTitle] = useState(
-    settings.donationTitle || "Soutenir notre journalisme indépendant"
+    settings.donationTitle || ""
   );
   const [donationSubtitle, setDonationSubtitle] = useState(
-    settings.donationSubtitle || "Aidez-nous à financer nos enquêtes et nos podcasts de terrain en toute liberté."
+    settings.donationSubtitle || ""
   );
   const [donationDescription, setDonationDescription] = useState(
-    settings.donationDescription || DEFAULT_VITRINE_SETTINGS.donationDescription || ""
+    settings.donationDescription || ""
   );
   const [donationUrl, setDonationUrl] = useState(
     settings.donationUrl || ""
   );
   const [donationButtonText, setDonationButtonText] = useState(
-    settings.donationButtonText || "Faire un don libre"
+    settings.donationButtonText || ""
   );
   const [donationImageUrl, setDonationImageUrl] = useState<string>(
     settings.donationImageUrl || ""

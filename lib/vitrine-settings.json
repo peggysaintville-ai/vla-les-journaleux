@@ -16,7 +16,7 @@
   "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   "audioEmbedUrl": "https://open.spotify.com/embed/episode/7makk4oTQel546B0PZlDM5",
   "showAudioBackground": true,
-  "audioBackgroundUrl": "https://cy8hmr7jrv8ny5af.private.blob.vercel-storage.com/ambiance/1789514741213-ambiance.mp3?download=1",
+  "audioBackgroundUrl": "https://cy8hmr7jrv8ny5af.private.blob.vercel-storage.com/ambiance/1789515318086-ambiance.mp3?download=1",
   "audioBackgroundTitle": "Ambiance Studio d'Investigation (432 Hz)",
   "showPodcastsSection": true,
   "showArticlesSection": true,
@@ -32,5 +32,5 @@
   "donationButtonText": "Faire un don libre",
   "donationImageUrl": "/images/journalist-portrait.jpg",
   "createdAt": "2026-09-14T21:04:22.587Z",
-  "updatedAt": "2026-09-15T23:26:01.227Z"
+  "updatedAt": "2026-09-15T23:35:35.100Z"
 }
