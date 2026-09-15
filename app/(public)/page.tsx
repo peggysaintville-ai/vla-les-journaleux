@@ -49,13 +49,13 @@ export default async function PublicShowcasePage() {
     getVitrineSettings(),
   ]);
   return (
-    <div className="space-y-24 sm:space-y-32 pb-24">
+    <div className="space-y-16 sm:space-y-20 pb-20">
       {/* 1. HERO SECTION */}
-      <section className="relative pt-6 sm:pt-12 lg:pt-16 overflow-hidden">
+      <section className="relative pt-3 sm:pt-6 lg:pt-8 overflow-hidden">
         {/* Ambient lighting glows */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-amber-500/15 via-rose-500/10 to-transparent blur-[140px] pointer-events-none rounded-full" />
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-b from-amber-500/15 via-rose-500/10 to-transparent blur-[130px] pointer-events-none rounded-full" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-5 sm:space-y-6">
           {/* Teaser Vitrine si activé */}
           {vitrineSettings.showTeaserBanner && (
             <PublicTeaserBanner
@@ -71,64 +71,72 @@ export default async function PublicShowcasePage() {
             />
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
             {/* Colonne Texte & Positionnement */}
-            <div className="lg:col-span-7 space-y-6 text-left">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-900/90 border border-neutral-800 text-amber-400 text-xs font-semibold tracking-wide uppercase shadow-sm">
+            <div className="lg:col-span-7 space-y-4 text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900/90 border border-neutral-800 text-amber-400 text-[11px] font-semibold tracking-wide uppercase shadow-sm">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Journaliste d&apos;Investigation & Réalisatrice Sonore</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1]">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-[1.2]">
                 {vitrineSettings.heroTitle || websiteContent.heroTitle}
               </h1>
 
-              <p className="text-base sm:text-lg text-neutral-300 max-w-2xl leading-relaxed">
+              <p className="text-sm sm:text-base text-neutral-300 max-w-2xl leading-relaxed">
                 {vitrineSettings.heroSubtitle || websiteContent.heroSubtitle}
               </p>
 
               {/* Boutons d'action hero */}
-              <div className="flex flex-wrap items-center gap-4 pt-4">
+              <div className="flex flex-wrap items-center gap-3 pt-2">
                 <a
                   href="#ecoutes"
-                  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-brand-accent hover:bg-brand-accentLight text-white font-bold text-sm shadow-xl shadow-brand-accent/20 hover:shadow-brand-accent/30 transition-all transform active:scale-95"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-accent hover:bg-brand-accentLight text-white font-bold text-xs shadow-lg shadow-brand-accent/20 hover:shadow-brand-accent/30 transition-all transform active:scale-95"
                 >
                   <Headphones className="w-4 h-4" />
                   <span>Écouter les extraits</span>
                 </a>
 
                 <a
+                  href="#bio"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-neutral-900/80 hover:bg-neutral-800 text-neutral-200 hover:text-white border border-neutral-800 text-xs font-semibold transition-all shadow-sm"
+                >
+                  <span>Démarche & Bio</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-brand-accentLight" />
+                </a>
+
+                <a
                   href="#contact"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-brand-primary/80 hover:bg-brand-secondary text-brand-cream hover:text-white border border-brand-accent/30 hover:border-brand-accentLight text-sm font-semibold transition-all shadow-md"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary/80 hover:bg-brand-secondary text-brand-cream hover:text-white border border-brand-accent/30 hover:border-brand-accentLight text-xs font-semibold transition-all shadow-sm"
                 >
                   <span>Demander un devis</span>
-                  <ChevronRight className="w-4 h-4 text-brand-accentLight" />
+                  <ChevronRight className="w-3.5 h-3.5 text-brand-accentLight" />
                 </a>
               </div>
 
               {/* Indicateurs clés */}
-              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-neutral-800/80">
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-neutral-800/80">
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono">
+                  <div className="text-xl sm:text-2xl font-black text-white font-mono">
                     12+
                   </div>
-                  <div className="text-xs text-neutral-400 mt-1">
+                  <div className="text-[11px] text-neutral-400 mt-0.5">
                     Années d&apos;enquête
                   </div>
                 </div>
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-amber-400 font-mono">
+                  <div className="text-xl sm:text-2xl font-black text-amber-400 font-mono">
                     850k+
                   </div>
-                  <div className="text-xs text-neutral-400 mt-1">
+                  <div className="text-[11px] text-neutral-400 mt-0.5">
                     Écoutes cumulées
                   </div>
                 </div>
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono">
+                  <div className="text-xl sm:text-2xl font-black text-white font-mono">
                     4
                   </div>
-                  <div className="text-xs text-neutral-400 mt-1">
+                  <div className="text-[11px] text-neutral-400 mt-0.5">
                     Prix journalistiques
                   </div>
                 </div>
@@ -137,8 +145,8 @@ export default async function PublicShowcasePage() {
 
             {/* Colonne Portrait Éditorial */}
             <div className="lg:col-span-5 relative">
-              <div className="relative mx-auto max-w-md lg:max-w-none rounded-3xl overflow-hidden border border-neutral-800 bg-neutral-900/50 shadow-2xl group">
-                <div className="aspect-[4/3] sm:aspect-[4/3] relative w-full overflow-hidden bg-neutral-950">
+              <div className="relative mx-auto max-w-sm lg:max-w-none rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900/50 shadow-xl group">
+                <div className="aspect-[4/3] max-h-[250px] sm:max-h-[280px] relative w-full overflow-hidden bg-neutral-950">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={vitrineSettings.heroPhotoUrl || "/images/journalist-portrait.jpg"}
@@ -150,17 +158,17 @@ export default async function PublicShowcasePage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-transparent opacity-60 pointer-events-none" />
                 </div>
 
-                <div className="p-5 bg-neutral-900/90 border-t border-neutral-800/80 backdrop-blur-md flex items-center justify-between">
+                <div className="p-3.5 bg-neutral-900/90 border-t border-neutral-800/80 backdrop-blur-md flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-bold text-white">
+                    <div className="text-xs sm:text-sm font-bold text-white">
                       {vitrineSettings.heroJournalistName || "Peggy SAINT-VILLE"}
                     </div>
-                    <div className="text-xs text-neutral-400">
+                    <div className="text-[11px] text-neutral-400">
                       {vitrineSettings.heroCaption || "En direct de la rédaction centrale"}
                     </div>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-mono font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span>{vitrineSettings.heroBadgeStatus || "En production active"}</span>
                   </div>
                 </div>
@@ -170,21 +178,21 @@ export default async function PublicShowcasePage() {
         </div>
 
         {/* Badges Médias Partenaires */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-24">
-          <div className="pt-8 border-t border-neutral-800/80">
-            <p className="text-center text-xs font-mono uppercase tracking-widest text-neutral-400 mb-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 sm:mt-12">
+          <div className="pt-6 border-t border-neutral-800/80">
+            <p className="text-center text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-neutral-400 mb-4">
               Enquêtes & reportages diffusés sur les grandes antennes
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 items-center">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-center">
               {PARTNER_MEDIAS.map((media) => (
                 <div
                   key={media.name}
-                  className="p-4 rounded-xl bg-neutral-900/40 border border-neutral-800/60 hover:border-neutral-700 text-center transition-all group"
+                  className="p-3 rounded-xl bg-neutral-900/40 border border-neutral-800/60 hover:border-neutral-700 text-center transition-all group"
                 >
-                  <div className="text-sm font-bold text-neutral-300 group-hover:text-white transition-colors">
+                  <div className="text-xs sm:text-sm font-bold text-neutral-300 group-hover:text-white transition-colors">
                     {media.name}
                   </div>
-                  <div className="text-[11px] text-neutral-400 mt-0.5">
+                  <div className="text-[10px] text-neutral-400 mt-0.5">
                     {media.subtitle}
                   </div>
                 </div>

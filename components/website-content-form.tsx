@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useState, useRef } from "react";
-import { upload } from "@vercel/blob/client";
 import type { WebsiteContentData } from "@/lib/website-content";
 import { VitrineSettingsData, DEFAULT_VITRINE_SETTINGS } from "@/lib/vitrine-settings-types";
 import { updateWebsiteContentAction } from "@/app/(app)/site-vitrine/actions";
@@ -128,32 +127,39 @@ export default function WebsiteContentForm({
   const [showBio, setShowBio] = useState(settings.showBioSection);
   const [showContact, setShowContact] = useState(settings.showContactSection);
 
-  // Traitement et upload direct vers Vercel Blob du teaser audio
+  // Traitement et upload direct du teaser audio via FormData vers /api/upload
   const handleAudioFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsProcessingAudio(true);
-    setTeaserUploadProgress(0);
-    setAudioStatusMessage(`Téléversement de "${file.name}" vers Vercel Blob...`);
+    setTeaserUploadProgress(20);
+    setAudioStatusMessage(`Téléversement de "${file.name}" en cours...`);
 
     try {
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/upload",
-        onUploadProgress: (progress) => {
-          setTeaserUploadProgress(progress.percentage);
-          setAudioStatusMessage(`Téléversement vers Vercel Blob : ${progress.percentage}%`);
-        },
+      const formData = new FormData();
+      formData.append("file", file);
+
+      setTeaserUploadProgress(50);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
 
-      setTeaserAudioUrl(blob.url);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erreur serveur (${res.status})`);
+      }
+
+      const data = await res.json();
+      setTeaserAudioUrl(data.url);
       setTeaserUploadProgress(100);
-      setAudioStatusMessage(`Extrait audio hébergé avec succès sur Vercel Blob !`);
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+      setAudioStatusMessage(`Extrait audio "${file.name}" téléversé avec succès (${sizeMb} Mo)`);
     } catch (err: any) {
-      console.error("Erreur upload Vercel Blob teaser :", err);
-      // Fallback local en cas d'absence de configuration Blob en environnement de dev
-      setAudioStatusMessage("Upload Blob indisponible, conversion locale en cours...");
+      console.error("Erreur upload teaser :", err);
+      // Fallback local en cas de problème réseau
+      setAudioStatusMessage("Envoi direct indisponible, conversion locale en cours...");
       const reader = new FileReader();
       reader.onload = (readerEvent) => {
         const result = readerEvent.target?.result as string;
@@ -178,32 +184,39 @@ export default function WebsiteContentForm({
     }
   };
 
-  // Traitement et upload direct vers Vercel Blob de la musique d'ambiance
+  // Traitement et upload direct de la musique d'ambiance via FormData vers /api/upload
   const handleAmbianceFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsProcessingAmbiance(true);
-    setAmbianceUploadProgress(0);
-    setAmbianceStatusMessage(`Téléversement de "${file.name}" vers Vercel Blob...`);
+    setAmbianceUploadProgress(20);
+    setAmbianceStatusMessage(`Téléversement de "${file.name}" en cours...`);
 
     try {
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/upload",
-        onUploadProgress: (progress) => {
-          setAmbianceUploadProgress(progress.percentage);
-          setAmbianceStatusMessage(`Téléversement vers Vercel Blob : ${progress.percentage}%`);
-        },
+      const formData = new FormData();
+      formData.append("file", file);
+
+      setAmbianceUploadProgress(50);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
 
-      setAudioBackgroundUrl(blob.url);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erreur serveur (${res.status})`);
+      }
+
+      const data = await res.json();
+      setAudioBackgroundUrl(data.url);
       setAmbianceUploadProgress(100);
-      setAmbianceStatusMessage(`Musique d'ambiance hébergée avec succès sur Vercel Blob !`);
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+      setAmbianceStatusMessage(`Piste audio "${file.name}" téléversée avec succès (${sizeMb} Mo)`);
     } catch (err: any) {
-      console.error("Erreur upload Vercel Blob ambiance :", err);
-      // Fallback local en cas d'absence de configuration Blob en environnement de dev
-      setAmbianceStatusMessage("Upload Blob indisponible, conversion locale en cours...");
+      console.error("Erreur upload ambiance :", err);
+      // Fallback local en cas de problème réseau
+      setAmbianceStatusMessage("Envoi direct indisponible, conversion locale en cours...");
       const reader = new FileReader();
       reader.onload = (readerEvent) => {
         const result = readerEvent.target?.result as string;
