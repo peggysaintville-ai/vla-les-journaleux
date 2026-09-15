@@ -8,7 +8,7 @@ import {
   Plus,
   Globe,
   Trash2,
-  Edit3,
+  Pencil,
   CheckCircle2,
   AlertCircle,
   ExternalLink,
@@ -360,18 +360,7 @@ export default function ArticlesManager({ initialArticles }: ArticlesManagerProp
                     {/* Actions sur chaque ligne */}
                     <td className="py-4 px-6 text-right whitespace-nowrap">
                       <div className="inline-flex items-center gap-1.5">
-                        {/* Bouton d'action Modifier (icône crayon) */}
-                        <button
-                          type="button"
-                          onClick={() => openEditArticle(art)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-brand-accent text-neutral-200 hover:text-white border border-neutral-700 hover:border-brand-accent text-xs font-semibold transition cursor-pointer shadow-sm active:scale-95"
-                          title="Modifier l'article"
-                        >
-                          <Edit3 className="w-3.5 h-3.5 text-brand-accentLight group-hover:text-white" />
-                          <span>Modifier</span>
-                        </button>
-
-                        {/* Lien voir sur site */}
+                        {/* Lien voir sur site vitrine */}
                         {art.isPublished && (
                           <Link
                             href={`/articles/${art.slug}`}
@@ -382,6 +371,17 @@ export default function ArticlesManager({ initialArticles }: ArticlesManagerProp
                             <ExternalLink className="w-3.5 h-3.5" />
                           </Link>
                         )}
+
+                        {/* Bouton d'action Modifier (icône crayon Pencil) juste avant la corbeille */}
+                        <button
+                          type="button"
+                          onClick={() => openEditArticle(art)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-brand-accent text-neutral-200 hover:text-white border border-neutral-700 hover:border-brand-accent text-xs font-semibold transition cursor-pointer shadow-sm active:scale-95"
+                          title="Modifier l'article"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-brand-accentLight group-hover:text-white" />
+                          <span>Modifier</span>
+                        </button>
 
                         {/* Bouton supprimer */}
                         <button
@@ -470,7 +470,7 @@ export default function ArticlesManager({ initialArticles }: ArticlesManagerProp
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-brand-accent text-neutral-200 hover:text-white border border-neutral-700 hover:border-brand-accent text-xs font-semibold transition cursor-pointer shadow-sm active:scale-95"
                     title="Modifier l'article"
                   >
-                    <Edit3 className="w-3.5 h-3.5" />
+                    <Pencil className="w-3.5 h-3.5 text-brand-accentLight group-hover:text-white" />
                     <span>Modifier</span>
                   </button>
                   <button
