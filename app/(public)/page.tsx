@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import AudioPlayer from "@/components/audio-player";
 import ContactForm from "@/components/contact-form";
@@ -49,29 +48,15 @@ export default async function PublicShowcasePage() {
     getWebsiteContent(),
     getVitrineSettings(),
   ]);
+
   return (
     <div className="space-y-16 sm:space-y-20 pb-20">
-      {/* 1. HERO SECTION */}
-      <section className="relative pt-3 sm:pt-6 lg:pt-8 overflow-hidden">
-        {/* Ambient lighting glows */}
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-b from-amber-500/15 via-rose-500/10 to-transparent blur-[130px] pointer-events-none rounded-full" />
+      {/* 1. HERO SECTION - EN-TÊTE ABSOLUE EN HAUT DE PAGE */}
+      <section className="relative pt-2 sm:pt-4 lg:pt-6 overflow-hidden">
+        {/* Halo lumineux d'ambiance */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[750px] h-[320px] bg-gradient-to-b from-amber-500/15 via-rose-500/10 to-transparent blur-[130px] pointer-events-none rounded-full" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-5 sm:space-y-6">
-          {/* Teaser Vitrine si activé */}
-          {vitrineSettings.showTeaserBanner && (
-            <PublicTeaserBanner
-              teaser={{
-                teaserEnabled: true,
-                teaserTitle: vitrineSettings.teaserTitle || websiteContent.teaserTitle,
-                teaserHook: vitrineSettings.teaserSubtitle || websiteContent.teaserHook,
-                teaserAudioUrl: vitrineSettings.teaserAudioUrl || null,
-                teaserLinkUrl: vitrineSettings.teaserExternalLink || websiteContent.teaserLinkUrl,
-                teaserBadge: "Bientôt disponible",
-                teaserReleaseDate: websiteContent.teaserReleaseDate,
-              }}
-            />
-          )}
-
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
             {/* Colonne Texte & Positionnement */}
             <div className="lg:col-span-7 space-y-4 text-left">
@@ -80,27 +65,35 @@ export default async function PublicShowcasePage() {
                 <span>Journaliste d&apos;Investigation & Réalisatrice Sonore</span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-[1.2]">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-[1.2] whitespace-pre-line">
                 {vitrineSettings.heroTitle || websiteContent.heroTitle}
               </h1>
 
-              <p className="text-sm sm:text-base text-neutral-300 max-w-2xl leading-relaxed">
+              <p className="text-sm sm:text-base text-neutral-300 max-w-2xl leading-relaxed whitespace-pre-line">
                 {vitrineSettings.heroSubtitle || websiteContent.heroSubtitle}
               </p>
 
-              {/* Boutons d'action hero */}
+              {/* Boutons d'action Hero */}
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <a
-                  href="#ecoutes"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-accent hover:bg-brand-accentLight text-white font-bold text-xs shadow-lg shadow-brand-accent/20 hover:shadow-brand-accent/30 transition-all transform active:scale-95"
+                  href="#articles"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-accent hover:bg-brand-accentLight text-white font-bold text-xs shadow-lg shadow-brand-accent/20 hover:shadow-brand-accent/30 transition-all transform active:scale-95 cursor-pointer"
                 >
-                  <Headphones className="w-4 h-4" />
+                  <BookOpen className="w-4 h-4" />
+                  <span>Explorer les enquêtes</span>
+                </a>
+
+                <a
+                  href="#ecoutes"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-900/80 hover:bg-neutral-800 text-neutral-200 hover:text-white border border-neutral-800 text-xs font-semibold transition-all shadow-sm cursor-pointer"
+                >
+                  <Headphones className="w-4 h-4 text-brand-accentLight" />
                   <span>Écouter les extraits</span>
                 </a>
 
                 <a
                   href="#bio"
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-neutral-900/80 hover:bg-neutral-800 text-neutral-200 hover:text-white border border-neutral-800 text-xs font-semibold transition-all shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-neutral-900/80 hover:bg-neutral-800 text-neutral-200 hover:text-white border border-neutral-800 text-xs font-semibold transition-all shadow-sm cursor-pointer"
                 >
                   <span>Démarche & Bio</span>
                   <ChevronRight className="w-3.5 h-3.5 text-brand-accentLight" />
@@ -108,7 +101,7 @@ export default async function PublicShowcasePage() {
 
                 <a
                   href="#contact"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary/80 hover:bg-brand-secondary text-brand-cream hover:text-white border border-brand-accent/30 hover:border-brand-accentLight text-xs font-semibold transition-all shadow-sm"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary/80 hover:bg-brand-secondary text-brand-cream hover:text-white border border-brand-accent/30 hover:border-brand-accentLight text-xs font-semibold transition-all shadow-sm cursor-pointer"
                 >
                   <span>Demander un devis</span>
                   <ChevronRight className="w-3.5 h-3.5 text-brand-accentLight" />
@@ -147,7 +140,7 @@ export default async function PublicShowcasePage() {
             {/* Colonne Portrait Éditorial */}
             <div className="lg:col-span-5 relative">
               <div className="relative mx-auto max-w-sm lg:max-w-none rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900/50 shadow-xl group">
-                <div className="aspect-[4/3] max-h-[250px] sm:max-h-[280px] relative w-full overflow-hidden bg-neutral-950">
+                <div className="aspect-[4/3] max-h-[260px] sm:max-h-[300px] relative w-full overflow-hidden bg-neutral-950">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={vitrineSettings.heroPhotoUrl || "/images/journalist-portrait.jpg"}
@@ -203,64 +196,7 @@ export default async function PublicShowcasePage() {
         </div>
       </section>
 
-      {/* 2. PLAYER AUDIO INTERACTIF (#ecoutes) */}
-      {vitrineSettings.showPodcastsSection && (
-        <section id="ecoutes" className="scroll-mt-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 text-xs font-semibold uppercase tracking-wider">
-                <Headphones className="w-3.5 h-3.5" />
-                <span>Studio d&apos;Écoute</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                Extraits & Créations Sonores
-              </h2>
-              <p className="text-sm text-neutral-400">
-                Découvrez la signature sonore de mes documentaires : immersion sur le
-                terrain, entretiens sensibles et réalisation soignée.
-              </p>
-            </div>
-
-            <div className="max-w-4xl mx-auto space-y-12">
-              <AudioPlayer />
-
-              {/* Lecteurs Multimédias Externes Synchronisés */}
-              {(vitrineSettings.videoUrl || vitrineSettings.audioEmbedUrl || websiteContent.videoUrl || websiteContent.audioEmbedUrl) && (
-                <div className="space-y-6 pt-10 border-t border-neutral-800/80">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-brand-accentLight" />
-                        <span>Immersion Multimédia & Grands Formats</span>
-                      </h3>
-                      <p className="text-xs text-neutral-400 mt-1">
-                        Lecteurs externes synchronisés : la musique d&apos;ambiance du site se coupe automatiquement dès le démarrage de la vidéo ou du son.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-6">
-                    {(vitrineSettings.videoUrl || websiteContent.videoUrl) && (
-                      <MediaEmbed
-                        url={(vitrineSettings.videoUrl || websiteContent.videoUrl)!}
-                        title="Grand Format Documentaire (YouTube / Vidéo)"
-                      />
-                    )}
-                    {(vitrineSettings.audioEmbedUrl || websiteContent.audioEmbedUrl) && (
-                      <MediaEmbed
-                        url={(vitrineSettings.audioEmbedUrl || websiteContent.audioEmbedUrl)!}
-                        title="Écoute Intégrale Plateforme (Spotify / Apple Podcasts)"
-                      />
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 3. PARCOURS & BIO (#bio) */}
+      {/* 2. PARCOURS & BIO (#bio) */}
       {vitrineSettings.showBioSection && (
         <section id="bio" className="scroll-mt-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -340,7 +276,7 @@ export default async function PublicShowcasePage() {
         </section>
       )}
 
-      {/* 4. ENQUÊTES & ARTICLES DU BLOG (#articles) */}
+      {/* 3. ENQUÊTES & ARTICLES DU BLOG (#articles & #enquetes) */}
       {vitrineSettings.showArticlesSection && (
         <section id="articles" className="scroll-mt-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -360,65 +296,65 @@ export default async function PublicShowcasePage() {
             {publishedArticles.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {publishedArticles.map((art) => (
-                <article
-                  key={art.id}
-                  className="rounded-3xl bg-neutral-900/60 border border-neutral-800 hover:border-brand-accent/50 p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 shadow-xl group"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="px-2.5 py-1 rounded-full bg-brand-primary text-brand-accentLight text-[11px] font-mono font-bold uppercase tracking-wider border border-brand-accent/30">
-                        {art.category || "Investigation"}
-                      </span>
-                      <div className="flex items-center gap-1.5 text-neutral-500 font-mono">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>
-                          {new Date(art.publishedAt || art.createdAt).toLocaleDateString("fr-FR", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}
+                  <article
+                    key={art.id}
+                    className="rounded-3xl bg-neutral-900/60 border border-neutral-800 hover:border-brand-accent/50 p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 shadow-xl group"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="px-2.5 py-1 rounded-full bg-brand-primary text-brand-accentLight text-[11px] font-mono font-bold uppercase tracking-wider border border-brand-accent/30">
+                          {art.category || "Investigation"}
                         </span>
+                        <div className="flex items-center gap-1.5 text-neutral-500 font-mono">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>
+                            {new Date(art.publishedAt || art.createdAt).toLocaleDateString("fr-FR", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
                       </div>
+
+                      <h3 className="text-xl font-bold text-white group-hover:text-brand-accentLight transition-colors line-clamp-2">
+                        <Link href={`/articles/${art.slug}`}>
+                          {art.title}
+                        </Link>
+                      </h3>
+
+                      <p className="text-xs sm:text-sm text-neutral-400 line-clamp-3 leading-relaxed">
+                        {art.excerpt}
+                      </p>
                     </div>
 
-                    <h3 className="text-xl font-bold text-white group-hover:text-brand-accentLight transition-colors line-clamp-2">
-                      <Link href={`/articles/${art.slug}`}>
-                        {art.title}
+                    <div className="pt-6 mt-6 border-t border-neutral-800/80 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-neutral-400">
+                        <Clock className="w-3.5 h-3.5 text-brand-accent" />
+                        <span>{Math.max(2, Math.ceil(art.content.split(/\s+/).length / 200))} min de lecture</span>
+                      </div>
+
+                      <Link
+                        href={`/articles/${art.slug}`}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-accentLight hover:text-white transition group-hover:translate-x-1"
+                      >
+                        <span>Lire l&apos;enquête</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
-                    </h3>
-
-                    <p className="text-xs sm:text-sm text-neutral-400 line-clamp-3 leading-relaxed">
-                      {art.excerpt}
-                    </p>
-                  </div>
-
-                  <div className="pt-6 mt-6 border-t border-neutral-800/80 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs text-neutral-400">
-                      <Clock className="w-3.5 h-3.5 text-brand-accent" />
-                      <span>{Math.max(2, Math.ceil(art.content.split(/\s+/).length / 200))} min de lecture</span>
                     </div>
-
-                    <Link
-                      href={`/articles/${art.slug}`}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-accentLight hover:text-white transition group-hover:translate-x-1"
-                    >
-                      <span>Lire l&apos;enquête</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 rounded-3xl bg-neutral-900/40 border border-neutral-800 p-8 text-neutral-400 text-sm">
-              Aucune enquête n&apos;est actuellement publiée en libre accès.
-            </div>
-          )}
-        </div>
-      </section>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 rounded-3xl bg-neutral-900/40 border border-neutral-800 p-8 text-neutral-400 text-sm">
+                Aucune enquête n&apos;est actuellement publiée en libre accès.
+              </div>
+            )}
+          </div>
+        </section>
       )}
 
-      {/* 5. CATALOGUE DE PRESTATIONS (#prestations) */}
+      {/* 4. CATALOGUE DE PRESTATIONS & TARIFS (#prestations & #tarifs) */}
       <section id="prestations" className="scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
@@ -518,10 +454,82 @@ export default async function PublicShowcasePage() {
         </div>
       </section>
 
-      {/* SECTION SOUTIEN & DONS (FINANCEMENT PARTICIPATIF) */}
+      {/* 5. PLAYER AUDIO INTERACTIF & PODCASTS (#ecoutes) */}
+      {vitrineSettings.showPodcastsSection && (
+        <section id="ecoutes" className="scroll-mt-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            {/* Bannière Teaser Projet si activée */}
+            {vitrineSettings.showTeaserBanner && (
+              <PublicTeaserBanner
+                teaser={{
+                  teaserEnabled: true,
+                  teaserTitle: vitrineSettings.teaserTitle || websiteContent.teaserTitle,
+                  teaserHook: vitrineSettings.teaserSubtitle || websiteContent.teaserHook,
+                  teaserAudioUrl: vitrineSettings.teaserAudioUrl || null,
+                  teaserLinkUrl: vitrineSettings.teaserExternalLink || websiteContent.teaserLinkUrl,
+                  teaserBadge: "Bientôt disponible",
+                  teaserReleaseDate: websiteContent.teaserReleaseDate,
+                }}
+              />
+            )}
+
+            <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 text-xs font-semibold uppercase tracking-wider">
+                <Headphones className="w-3.5 h-3.5" />
+                <span>Studio d&apos;Écoute</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                Extraits & Créations Sonores
+              </h2>
+              <p className="text-sm text-neutral-400">
+                Découvrez la signature sonore de mes documentaires : immersion sur le
+                terrain, entretiens sensibles et réalisation soignée.
+              </p>
+            </div>
+
+            <div className="max-w-4xl mx-auto space-y-12">
+              <AudioPlayer />
+
+              {/* Lecteurs Multimédias Externes Synchronisés */}
+              {(vitrineSettings.videoUrl || vitrineSettings.audioEmbedUrl || websiteContent.videoUrl || websiteContent.audioEmbedUrl) && (
+                <div className="space-y-6 pt-10 border-t border-neutral-800/80">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-brand-accentLight" />
+                        <span>Immersion Multimédia & Grands Formats</span>
+                      </h3>
+                      <p className="text-xs text-neutral-400 mt-1">
+                        Lecteurs externes synchronisés : la musique d&apos;ambiance du site se coupe automatiquement dès le démarrage de la vidéo ou du son.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    {(vitrineSettings.videoUrl || websiteContent.videoUrl) && (
+                      <MediaEmbed
+                        url={(vitrineSettings.videoUrl || websiteContent.videoUrl)!}
+                        title="Grand Format Documentaire (YouTube / Vidéo)"
+                      />
+                    )}
+                    {(vitrineSettings.audioEmbedUrl || websiteContent.audioEmbedUrl) && (
+                      <MediaEmbed
+                        url={(vitrineSettings.audioEmbedUrl || websiteContent.audioEmbedUrl)!}
+                        title="Écoute Intégrale Plateforme (Spotify / Apple Podcasts)"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 6. SECTION SOUTIEN & DONS (FINANCEMENT PARTICIPATIF) */}
       <PublicDonationSection settings={vitrineSettings} />
 
-      {/* 5. FORMULAIRE DE CONTACT & RÉSERVATION (#contact) */}
+      {/* 7. FORMULAIRE DE CONTACT & RÉSERVATION (#contact) */}
       {vitrineSettings.showContactSection && (
         <section id="contact" className="scroll-mt-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

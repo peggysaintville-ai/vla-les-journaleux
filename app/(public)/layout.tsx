@@ -39,7 +39,7 @@ export default async function PublicLayout({
           </Link>
 
           {/* Navigation fluide par ancres conditionnée par la visibilité des sections */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-300">
+          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-neutral-300">
             {vitrineSettings.showBioSection && (
               <a
                 href="#bio"
@@ -48,28 +48,34 @@ export default async function PublicLayout({
                 Parcours & Bio
               </a>
             )}
-            {vitrineSettings.showPodcastsSection && (
-              <a
-                href="#ecoutes"
-                className="hover:text-brand-accentLight transition-colors duration-200 tracking-wide"
-              >
-                Écoutes & Extraits
-              </a>
-            )}
             {vitrineSettings.showArticlesSection && (
               <a
-                href="#enquetes"
+                href="#articles"
                 className="hover:text-brand-accentLight transition-colors duration-200 tracking-wide"
               >
                 Enquêtes
               </a>
             )}
-            {vitrineSettings.showContactSection && (
+            <a
+              href="#prestations"
+              className="hover:text-brand-accentLight transition-colors duration-200 tracking-wide"
+            >
+              Prestations & Tarifs
+            </a>
+            {vitrineSettings.showPodcastsSection && (
               <a
-                href="#prestations"
+                href="#ecoutes"
                 className="hover:text-brand-accentLight transition-colors duration-200 tracking-wide"
               >
-                Prestations & Tarifs
+                Écoutes & Podcasts
+              </a>
+            )}
+            {vitrineSettings.donationEnabled && (
+              <a
+                href="#soutenir"
+                className="text-rose-400 hover:text-rose-300 transition-colors duration-200 tracking-wide font-semibold"
+              >
+                Soutenir
               </a>
             )}
             {vitrineSettings.showContactSection && (
