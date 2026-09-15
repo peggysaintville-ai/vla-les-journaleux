@@ -27,7 +27,30 @@ export default function BackgroundAudio({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const userWantsPlayRef = useRef(false);
 
-  const finalAudioUrl = audioUrl?.trim() || DEFAULT_AMBIENT_TRACK_URL;
+  // Résolution de l'URL sécurisée via le proxy serveur si distant
+  const getStreamSource = (rawUrl?: string | null): string => {
+    if (!rawUrl || !rawUrl.trim()) return DEFAULT_AMBIENT_TRACK_URL;
+    const cleanUrl = rawUrl.trim();
+    if (cleanUrl.startsWith("http")) {
+      return `/api/audio-proxy?url=${encodeURIComponent(cleanUrl)}`;
+    }
+    return cleanUrl;
+  };
+
+  const [currentSrc, setCurrentSrc] = useState<string>(() => getStreamSource(audioUrl));
+
+  useEffect(() => {
+    setCurrentSrc(getStreamSource(audioUrl));
+  }, [audioUrl]);
+
+  // Bascule automatique vers le fallback local en cas d'erreur de chargement
+  const handleAudioError = () => {
+    if (currentSrc !== DEFAULT_AMBIENT_TRACK_URL) {
+      setCurrentSrc(DEFAULT_AMBIENT_TRACK_URL);
+    } else {
+      setIsPlaying(false);
+    }
+  };
 
   // Configuration du volume initial et écouteurs Smart Audio Sync
   useEffect(() => {
@@ -58,8 +81,8 @@ export default function BackgroundAudio({
           .then(() => {
             setIsPlaying(true);
           })
-          .catch((err) => {
-            console.warn("Reprise automatique bloquée par le navigateur :", err);
+          .catch(() => {
+            // Autoplay restriction si l'utilisateur n'a pas encore interagi
           });
       }
     });
@@ -91,9 +114,18 @@ export default function BackgroundAudio({
           .then(() => {
             setIsPlaying(true);
           })
-          .catch((err) => {
-            console.warn("Lecture audio bloquée par la politique d'autoplay :", err);
-            setIsPlaying(false);
+          .catch(() => {
+            // Si la lecture distante est bloquée ou échoue, repli immédiat sur le fallback local
+            if (currentSrc !== DEFAULT_AMBIENT_TRACK_URL) {
+              setCurrentSrc(DEFAULT_AMBIENT_TRACK_URL);
+              setTimeout(() => {
+                if (audioRef.current && userWantsPlayRef.current) {
+                  audioRef.current.play().catch(() => setIsPlaying(false));
+                }
+              }, 100);
+            } else {
+              setIsPlaying(false);
+            }
           });
       }
     }
@@ -103,14 +135,15 @@ export default function BackgroundAudio({
 
   return (
     <div className="fixed bottom-5 right-5 z-40">
-      {/* Balise audio HTML5 persistante connectée aux settings Neon */}
+      {/* Balise audio HTML5 connectée au proxy streaming avec bascule de sécurité */}
       <audio
         ref={audioRef}
-        src={finalAudioUrl}
+        src={currentSrc}
         loop
         preload="auto"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
+        onError={handleAudioError}
       />
 
       <button
