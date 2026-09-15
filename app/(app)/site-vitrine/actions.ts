@@ -4,9 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { updateWebsiteContent, WebsiteContentData } from "@/lib/website-content";
 import { updateVitrineSettings, VitrineSettingsData } from "@/lib/vitrine-settings";
-
-import fs from "fs";
-import path from "path";
+import { put } from "@vercel/blob";
 
 export interface WebsiteContentActionResult {
   success?: boolean;
@@ -33,42 +31,19 @@ export async function updateWebsiteContentAction(
     const heroCaption = (formData.get("heroCaption") as string)?.trim() || "En direct de la rédaction centrale";
     const heroPhotoPosition = (formData.get("heroPhotoPosition") as string)?.trim() || "center center";
 
-    // Gestion de la photo du journaliste (Data URL base64, Upload de fichier ou URL)
+    // Gestion de la photo du journaliste (URL Vercel Blob, Data URL ou upload direct)
     let heroPhotoUrl = (formData.get("heroPhotoUrl") as string)?.trim() || null;
     const heroPhotoFile = formData.get("heroPhotoFile") as File | null;
 
     if (heroPhotoFile && heroPhotoFile.size > 0 && typeof heroPhotoFile.arrayBuffer === "function") {
       try {
-        const bytes = await heroPhotoFile.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const uploadsDir = path.join(process.cwd(), "public", "uploads");
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
         const cleanName = heroPhotoFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-        const fileName = `portrait-${Date.now()}-${cleanName}`;
-        fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
-        heroPhotoUrl = `/uploads/${fileName}`;
+        const blob = await put(`portraits/${Date.now()}-${cleanName}`, heroPhotoFile, {
+          access: "public",
+        });
+        heroPhotoUrl = blob.url;
       } catch (uploadErr) {
-        console.warn("Erreur sauvegarde upload image :", uploadErr);
-      }
-    } else if (heroPhotoUrl && heroPhotoUrl.startsWith("data:image/")) {
-      try {
-        const matches = heroPhotoUrl.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
-        if (matches) {
-          const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
-          const data = matches[2];
-          const buffer = Buffer.from(data, "base64");
-          const uploadsDir = path.join(process.cwd(), "public", "uploads");
-          if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-          }
-          const fileName = `portrait-${Date.now()}.${ext}`;
-          fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
-          heroPhotoUrl = `/uploads/${fileName}`;
-        }
-      } catch (diskErr) {
-        console.warn("Stockage direct de la Data URL en base Neon (fallback serverless) :", diskErr);
+        console.warn("Erreur upload Vercel Blob image portrait :", uploadErr);
       }
     }
 
@@ -97,41 +72,13 @@ export async function updateWebsiteContentAction(
 
     if (teaserAudioFile && teaserAudioFile.size > 0 && typeof teaserAudioFile.arrayBuffer === "function") {
       try {
-        const bytes = await teaserAudioFile.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const uploadsDir = path.join(process.cwd(), "public", "uploads");
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
         const cleanName = teaserAudioFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-        const fileName = `teaser-${Date.now()}-${cleanName}`;
-        fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
-        teaserAudioUrl = `/uploads/${fileName}`;
+        const blob = await put(`teaser/${Date.now()}-${cleanName}`, teaserAudioFile, {
+          access: "public",
+        });
+        teaserAudioUrl = blob.url;
       } catch (uploadErr) {
-        console.warn("Erreur sauvegarde upload audio teaser :", uploadErr);
-      }
-    } else if (teaserAudioUrl && teaserAudioUrl.startsWith("data:audio/")) {
-      try {
-        const matches = teaserAudioUrl.match(/^data:audio\/([a-zA-Z0-9.-]+);base64,(.+)$/);
-        if (matches) {
-          let ext = matches[1];
-          if (ext === "mpeg" || ext === "mp3") ext = "mp3";
-          else if (ext === "x-m4a" || ext === "m4a") ext = "m4a";
-          else if (ext === "wav" || ext === "x-wav") ext = "wav";
-          else if (ext.includes("ogg")) ext = "ogg";
-          else ext = "mp3";
-          const data = matches[2];
-          const buffer = Buffer.from(data, "base64");
-          const uploadsDir = path.join(process.cwd(), "public", "uploads");
-          if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-          }
-          const fileName = `teaser-audio-${Date.now()}.${ext}`;
-          fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
-          teaserAudioUrl = `/uploads/${fileName}`;
-        }
-      } catch (diskErr) {
-        console.warn("Stockage direct de la Data URL audio en base Neon (fallback serverless) :", diskErr);
+        console.warn("Erreur upload Vercel Blob teaser :", uploadErr);
       }
     }
 
@@ -151,41 +98,13 @@ export async function updateWebsiteContentAction(
 
     if (audioBackgroundFile && audioBackgroundFile.size > 0 && typeof audioBackgroundFile.arrayBuffer === "function") {
       try {
-        const bytes = await audioBackgroundFile.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const uploadsDir = path.join(process.cwd(), "public", "uploads");
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
         const cleanName = audioBackgroundFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-        const fileName = `ambiance-${Date.now()}-${cleanName}`;
-        fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
-        audioBackgroundUrl = `/uploads/${fileName}`;
+        const blob = await put(`ambiance/${Date.now()}-${cleanName}`, audioBackgroundFile, {
+          access: "public",
+        });
+        audioBackgroundUrl = blob.url;
       } catch (uploadErr) {
-        console.warn("Erreur sauvegarde upload audio ambiance :", uploadErr);
-      }
-    } else if (audioBackgroundUrl && audioBackgroundUrl.startsWith("data:audio/")) {
-      try {
-        const matches = audioBackgroundUrl.match(/^data:audio\/([a-zA-Z0-9.-]+);base64,(.+)$/);
-        if (matches) {
-          let ext = matches[1];
-          if (ext === "mpeg" || ext === "mp3") ext = "mp3";
-          else if (ext.includes("ogg")) ext = "ogg";
-          else if (ext === "wav" || ext === "x-wav") ext = "wav";
-          else if (ext === "x-m4a" || ext === "m4a") ext = "m4a";
-          else ext = "mp3";
-          const data = matches[2];
-          const buffer = Buffer.from(data, "base64");
-          const uploadsDir = path.join(process.cwd(), "public", "uploads");
-          if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-          }
-          const fileName = `ambiance-audio-${Date.now()}.${ext}`;
-          fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
-          audioBackgroundUrl = `/uploads/${fileName}`;
-        }
-      } catch (diskErr) {
-        console.warn("Stockage direct de la Data URL audio ambiance en base Neon (fallback serverless) :", diskErr);
+        console.warn("Erreur upload Vercel Blob ambiance :", uploadErr);
       }
     }
 
@@ -209,36 +128,13 @@ export async function updateWebsiteContentAction(
 
     if (donationImageFile && donationImageFile.size > 0 && typeof donationImageFile.arrayBuffer === "function") {
       try {
-        const bytes = await donationImageFile.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const uploadsDir = path.join(process.cwd(), "public", "uploads");
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
         const cleanName = donationImageFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-        const fileName = `donation-${Date.now()}-${cleanName}`;
-        fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
-        donationImageUrl = `/uploads/${fileName}`;
+        const blob = await put(`donations/${Date.now()}-${cleanName}`, donationImageFile, {
+          access: "public",
+        });
+        donationImageUrl = blob.url;
       } catch (uploadErr) {
-        console.warn("Erreur sauvegarde upload image don :", uploadErr);
-      }
-    } else if (donationImageUrl && donationImageUrl.startsWith("data:image/")) {
-      try {
-        const matches = donationImageUrl.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
-        if (matches) {
-          const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
-          const data = matches[2];
-          const buffer = Buffer.from(data, "base64");
-          const uploadsDir = path.join(process.cwd(), "public", "uploads");
-          if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-          }
-          const fileName = `donation-${Date.now()}.${ext}`;
-          fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
-          donationImageUrl = `/uploads/${fileName}`;
-        }
-      } catch (diskErr) {
-        console.warn("Stockage direct de la Data URL image don en base Neon :", diskErr);
+        console.warn("Erreur upload Vercel Blob don :", uploadErr);
       }
     }
 
