@@ -109,6 +109,14 @@ export default function WebsiteContentForm({
   const [audioStatusMessage, setAudioStatusMessage] = useState<string | null>(null);
   const audioFileInputRef = useRef<HTMLInputElement>(null);
 
+  // État de la musique d'ambiance
+  const [audioBackgroundUrl, setAudioBackgroundUrl] = useState<string>(
+    settings.audioBackgroundUrl || "https://actions.google.com/sounds/v1/ambiences/humming_room_tone.ogg"
+  );
+  const [isProcessingAmbiance, setIsProcessingAmbiance] = useState(false);
+  const [ambianceStatusMessage, setAmbianceStatusMessage] = useState<string | null>(null);
+  const ambianceFileInputRef = useRef<HTMLInputElement>(null);
+
   // Interrupteurs d'état local pour aperçu visuel dynamique
   const [showTeaser, setShowTeaser] = useState(settings.showTeaserBanner);
   const [showAudioBg, setShowAudioBg] = useState(settings.showAudioBackground);
@@ -138,6 +146,31 @@ export default function WebsiteContentForm({
     reader.onerror = () => {
       setIsProcessingAudio(false);
       setAudioStatusMessage("Erreur lors de la lecture du fichier audio.");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Traitement du fichier audio d'ambiance téléversé
+  const handleAmbianceFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessingAmbiance(true);
+    setAmbianceStatusMessage("Lecture et encodage de la musique d'ambiance...");
+
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      const result = readerEvent.target?.result as string;
+      if (result) {
+        setAudioBackgroundUrl(result);
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+        setAmbianceStatusMessage(`Piste audio "${file.name}" prête (${sizeMb} Mo)`);
+      }
+      setIsProcessingAmbiance(false);
+    };
+    reader.onerror = () => {
+      setIsProcessingAmbiance(false);
+      setAmbianceStatusMessage("Erreur lors de la lecture du fichier audio.");
     };
     reader.readAsDataURL(file);
   };
@@ -976,7 +1009,7 @@ export default function WebsiteContentForm({
               </label>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
                   Titre de la Piste d&apos;Ambiance
@@ -990,17 +1023,101 @@ export default function WebsiteContentForm({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
-                  Fichier Audio MP3 / OGG (URL)
-                </label>
-                <input
-                  type="url"
-                  name="audioBackgroundUrl"
-                  defaultValue={settings.audioBackgroundUrl || "https://actions.google.com/sounds/v1/ambiences/humming_room_tone.ogg"}
-                  placeholder="https://..."
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
-                />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                    <Volume2 className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Fichier Audio MP3 / OGG / WAV (URL ou Upload)</span>
+                  </label>
+                  {audioBackgroundUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAudioBackgroundUrl("https://actions.google.com/sounds/v1/ambiences/humming_room_tone.ogg");
+                        setAmbianceStatusMessage("Piste d'ambiance réinitialisée par défaut");
+                        if (ambianceFileInputRef.current) ambianceFileInputRef.current.value = "";
+                      }}
+                      className="text-[11px] text-neutral-400 hover:text-white flex items-center gap-1 transition cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Rétablir piste par défaut</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Input caché soumis au serveur pour l'URL ou Data URL */}
+                <input type="hidden" name="audioBackgroundUrl" value={audioBackgroundUrl} />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Bouton d'upload direct */}
+                  <div>
+                    <input
+                      ref={ambianceFileInputRef}
+                      type="file"
+                      accept=".mp3,.ogg,.wav,audio/*"
+                      onChange={handleAmbianceFileSelect}
+                      className="hidden"
+                      id="ambianceAudioFileInput"
+                      disabled={isProcessingAmbiance}
+                    />
+                    <label
+                      htmlFor="ambianceAudioFileInput"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/60 text-indigo-200 hover:text-white border border-indigo-500/40 text-xs font-bold cursor-pointer transition shadow-md"
+                    >
+                      {isProcessingAmbiance ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                          <span>Traitement audio en cours...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 text-indigo-300" />
+                          <span>Uploader un fichier audio (.mp3, .ogg, .wav)</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+
+                  {/* Saisie URL manuelle */}
+                  <div>
+                    <input
+                      type="text"
+                      value={audioBackgroundUrl.startsWith("data:") ? "" : audioBackgroundUrl}
+                      onChange={(e) => setAudioBackgroundUrl(e.target.value)}
+                      placeholder={audioBackgroundUrl.startsWith("data:") ? "Piste audio téléversée prête" : "Ou coller une URL https://..."}
+                      className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40 focus:border-brand-accent transition"
+                    />
+                  </div>
+                </div>
+
+                {/* Message d'état */}
+                {ambianceStatusMessage && (
+                  <div className="text-[11px] text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-indigo-400" />
+                    <span className="truncate">{ambianceStatusMessage}</span>
+                  </div>
+                )}
+
+                {/* Lecteur de pré-écoute immédiat de la musique d'ambiance */}
+                {audioBackgroundUrl && (
+                  <div className="p-3.5 rounded-2xl bg-neutral-950/90 border border-indigo-500/30 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-white flex items-center gap-1.5">
+                        <Music className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Pré-écoute de l&apos;ambiance sonore</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded-md border border-indigo-500/30">
+                        Ambiance prête
+                      </span>
+                    </div>
+                    <audio
+                      controls
+                      src={audioBackgroundUrl}
+                      className="w-full h-8 accent-indigo-500"
+                      preload="metadata"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

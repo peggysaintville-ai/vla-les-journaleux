@@ -88,7 +88,7 @@ export default function BackgroundAudio({
       unsubscribePause();
       cleanupResume();
     };
-  }, []);
+  }, [enabled, finalAudioUrl, defaultVolume]);
 
   // Fonction utilitaire de fondu audio (Fade In / Fade Out)
   const fadeVolume = (

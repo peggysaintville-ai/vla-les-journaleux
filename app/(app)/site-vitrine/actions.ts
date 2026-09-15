@@ -146,7 +146,49 @@ export async function updateWebsiteContentAction(
 
     // 3. Musique d'ambiance
     const showAudioBackground = formData.get("showAudioBackground") === "on" || formData.get("showAudioBackground") === "true";
-    const audioBackgroundUrl = (formData.get("audioBackgroundUrl") as string)?.trim() || null;
+    let audioBackgroundUrl = (formData.get("audioBackgroundUrl") as string)?.trim() || null;
+    const audioBackgroundFile = formData.get("audioBackgroundFile") as File | null;
+
+    if (audioBackgroundFile && audioBackgroundFile.size > 0 && typeof audioBackgroundFile.arrayBuffer === "function") {
+      try {
+        const bytes = await audioBackgroundFile.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const uploadsDir = path.join(process.cwd(), "public", "uploads");
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const cleanName = audioBackgroundFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const fileName = `ambiance-${Date.now()}-${cleanName}`;
+        fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+        audioBackgroundUrl = `/uploads/${fileName}`;
+      } catch (uploadErr) {
+        console.warn("Erreur sauvegarde upload audio ambiance :", uploadErr);
+      }
+    } else if (audioBackgroundUrl && audioBackgroundUrl.startsWith("data:audio/")) {
+      try {
+        const matches = audioBackgroundUrl.match(/^data:audio\/([a-zA-Z0-9.-]+);base64,(.+)$/);
+        if (matches) {
+          let ext = matches[1];
+          if (ext === "mpeg" || ext === "mp3") ext = "mp3";
+          else if (ext.includes("ogg")) ext = "ogg";
+          else if (ext === "wav" || ext === "x-wav") ext = "wav";
+          else if (ext === "x-m4a" || ext === "m4a") ext = "m4a";
+          else ext = "mp3";
+          const data = matches[2];
+          const buffer = Buffer.from(data, "base64");
+          const uploadsDir = path.join(process.cwd(), "public", "uploads");
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+          const fileName = `ambiance-audio-${Date.now()}.${ext}`;
+          fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+          audioBackgroundUrl = `/uploads/${fileName}`;
+        }
+      } catch (diskErr) {
+        console.warn("Stockage direct de la Data URL audio ambiance en base Neon (fallback serverless) :", diskErr);
+      }
+    }
+
     const audioBackgroundTitle = (formData.get("audioBackgroundTitle") as string)?.trim() || null;
 
     // 4. Modularité & Visibilité des sections
