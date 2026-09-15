@@ -50,7 +50,7 @@ export default async function PublicShowcasePage() {
   ]);
 
   return (
-    <div className="space-y-16 sm:space-y-20 pb-20">
+    <div className="space-y-8 sm:space-y-12 pb-20">
       {/* 1. HERO SECTION - EN-TÊTE ABSOLUE EN HAUT DE PAGE */}
       <section className="relative pt-2 sm:pt-4 lg:pt-6 overflow-hidden">
         {/* Halo lumineux d'ambiance */}
@@ -170,10 +170,92 @@ export default async function PublicShowcasePage() {
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Badges Médias Partenaires */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 sm:mt-12">
-          <div className="pt-6 border-t border-neutral-800/80">
+      {/* 2. PARCOURS & BIO (#bio) - Immédiatement sous le Hero pour une lecture fluide */}
+      {vitrineSettings.showBioSection && (
+        <section id="bio" className="scroll-mt-20 py-2 sm:py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-neutral-900/40 border border-neutral-800 rounded-3xl p-6 sm:p-8 lg:p-10 relative overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div className="lg:col-span-5 space-y-5">
+                  <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-amber-400">
+                    <Award className="w-4 h-4" />
+                    <span>Bio & Démarche Éditoriale</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                    {vitrineSettings.bioTitle || "L'indépendance comme boussole, l'humain comme centre."}
+                  </h2>
+                  <div className="space-y-3.5 text-sm text-neutral-300 leading-relaxed">
+                    {(vitrineSettings.heroBio || vitrineSettings.bioText || websiteContent.bioText).split("\n\n").map((para, i) => (
+                      <p key={i}>{para}</p>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="p-5 rounded-2xl bg-neutral-950/70 border border-neutral-800 space-y-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm sm:text-base font-bold text-white">
+                      Chartes & Déontologie
+                    </h3>
+                    <p className="text-xs text-neutral-400 leading-relaxed">
+                      Respect absolu de la charte de Munich. Protection stricte du
+                      secret des sources et vérification contradictoire systématique.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-neutral-950/70 border border-neutral-800 space-y-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-400/10 text-indigo-400 flex items-center justify-center">
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm sm:text-base font-bold text-white">
+                      Production Intégrée
+                    </h3>
+                    <p className="text-xs text-neutral-400 leading-relaxed">
+                      De la recherche documentaire initiale au mixage stéréo &
+                      binaural final, maîtrise de l&apos;ensemble de la chaîne de valeur.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-neutral-950/70 border border-neutral-800 space-y-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-rose-400/10 text-rose-400 flex items-center justify-center">
+                      <Award className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm sm:text-base font-bold text-white">
+                      Distinctions Récentes
+                    </h3>
+                    <p className="text-xs text-neutral-400 leading-relaxed">
+                      Prix de l&apos;Enquête Audio 2024 pour la série sur la souveraineté
+                      des données. Sélection officielle Festival Longueur d&apos;Ondes.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-neutral-950/70 border border-neutral-800 space-y-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-400/10 text-emerald-400 flex items-center justify-center">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm sm:text-base font-bold text-white">
+                      Réactivité Rédactionnelle
+                    </h3>
+                    <p className="text-xs text-neutral-400 leading-relaxed">
+                      Capacité de déploiement d&apos;urgence pour des sujets d&apos;actualité
+                      brûlante ou des prises de parole institutionnelles d&apos;envergure.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Badges Médias Partenaires */}
+      <section className="py-2 sm:py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="pt-4 border-t border-neutral-800/80">
             <p className="text-center text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-neutral-400 mb-4">
               Enquêtes & reportages diffusés sur les grandes antennes
             </p>
@@ -195,86 +277,6 @@ export default async function PublicShowcasePage() {
           </div>
         </div>
       </section>
-
-      {/* 2. PARCOURS & BIO (#bio) */}
-      {vitrineSettings.showBioSection && (
-        <section id="bio" className="scroll-mt-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-neutral-900/40 border border-neutral-800 rounded-3xl p-8 sm:p-12 lg:p-16 relative overflow-hidden">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-                <div className="lg:col-span-5 space-y-6">
-                  <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-amber-400">
-                    <Award className="w-4 h-4" />
-                    <span>Bio & Démarche Éditoriale</span>
-                  </div>
-                  <h2 className="text-3xl font-extrabold text-white tracking-tight">
-                    {vitrineSettings.bioTitle || "L'indépendance comme boussole, l'humain comme centre."}
-                  </h2>
-                  <div className="space-y-4 text-sm text-neutral-300 leading-relaxed">
-                    {(vitrineSettings.heroBio || vitrineSettings.bioText || websiteContent.bioText).split("\n\n").map((para, i) => (
-                      <p key={i}>{para}</p>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-6 rounded-2xl bg-neutral-950/70 border border-neutral-800 space-y-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Chartes & Déontologie
-                    </h3>
-                    <p className="text-xs text-neutral-400 leading-relaxed">
-                      Respect absolu de la charte de Munich. Protection stricte du
-                      secret des sources et vérification contradictoire systématique.
-                    </p>
-                  </div>
-
-                  <div className="p-6 rounded-2xl bg-neutral-950/70 border border-neutral-800 space-y-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-400/10 text-indigo-400 flex items-center justify-center">
-                      <Layers className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Production Intégrée
-                    </h3>
-                    <p className="text-xs text-neutral-400 leading-relaxed">
-                      De la recherche documentaire initiale au mixage stéréo &
-                      binaural final, maîtrise de l&apos;ensemble de la chaîne de valeur.
-                    </p>
-                  </div>
-
-                  <div className="p-6 rounded-2xl bg-neutral-950/70 border border-neutral-800 space-y-3">
-                    <div className="w-8 h-8 rounded-lg bg-rose-400/10 text-rose-400 flex items-center justify-center">
-                      <Award className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Distinctions Récentes
-                    </h3>
-                    <p className="text-xs text-neutral-400 leading-relaxed">
-                      Prix de l&apos;Enquête Audio 2024 pour la série sur la souveraineté
-                      des données. Sélection officielle Festival Longueur d&apos;Ondes.
-                    </p>
-                  </div>
-
-                  <div className="p-6 rounded-2xl bg-neutral-950/70 border border-neutral-800 space-y-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-400/10 text-emerald-400 flex items-center justify-center">
-                      <Clock className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Réactivité Rédactionnelle
-                    </h3>
-                    <p className="text-xs text-neutral-400 leading-relaxed">
-                      Capacité de déploiement d&apos;urgence pour des sujets d&apos;actualité
-                      brûlante ou des prises de parole institutionnelles d&apos;envergure.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* 3. ENQUÊTES & ARTICLES DU BLOG (#articles & #enquetes) */}
       {vitrineSettings.showArticlesSection && (

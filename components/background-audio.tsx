@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Volume2, VolumeX, Sparkles, Radio } from "lucide-react";
+import { Volume2, VolumeX, Radio } from "lucide-react";
 import { onSmartAudioPause, onSmartAudioResume } from "@/lib/smart-audio-sync";
 
-// Piste d'ambiance sonore feutrée d'investigation
+// Piste d'ambiance sonore feutrée d'investigation par défaut
 const DEFAULT_AMBIENT_TRACK_URL = "/audio/ambient-studio.wav";
 
 interface BackgroundAudioProps {
@@ -18,134 +18,84 @@ export default function BackgroundAudio({
   enabled = true,
   audioUrl,
   title = "Immersion Studio • 432 Hz",
-  defaultVolume = 0.20,
+  defaultVolume = 0.25,
 }: BackgroundAudioProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSmartPaused, setIsSmartPaused] = useState(false);
   const [activeMediaSource, setActiveMediaSource] = useState<string | null>(null);
-  const [volume, setVolume] = useState(defaultVolume);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const fadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const userWantsPlayRef = useRef(false);
 
-  const finalAudioUrl = audioUrl || DEFAULT_AMBIENT_TRACK_URL;
+  const finalAudioUrl = audioUrl?.trim() || DEFAULT_AMBIENT_TRACK_URL;
 
-  // Initialisation de l'élément audio natif
+  // Configuration du volume initial et écouteurs Smart Audio Sync
   useEffect(() => {
     if (typeof window === "undefined" || !enabled) return;
 
-    const audio = new Audio();
-    audio.src = finalAudioUrl;
-    audio.loop = true;
-    audio.volume = defaultVolume;
-    audio.preload = "none";
-    audioRef.current = audio;
+    if (audioRef.current) {
+      audioRef.current.volume = defaultVolume;
+    }
 
-    // Écouteur Smart Audio Pause (déclenché par YouTube, Vimeo, Spotify, audio player)
+    // Écouteur Smart Audio Pause (déclenché quand un média externe est lancé)
     const unsubscribePause = onSmartAudioPause((detail) => {
       if (userWantsPlayRef.current && audioRef.current) {
         setIsSmartPaused(true);
         setActiveMediaSource(detail.source || "Média externe");
-        fadeVolume(audioRef.current, 0, 400, () => {
-          if (audioRef.current) {
-            audioRef.current.pause();
-            setIsPlaying(false);
-          }
-        });
+        audioRef.current.pause();
+        setIsPlaying(false);
       }
     });
 
-    // Écouteur Smart Audio Resume (déclenché à la fin ou mise en pause du média externe)
-    const unsubscribeResume = () => onSmartAudioResume(() => {
+    // Écouteur Smart Audio Resume (déclenché quand le média externe se termine ou est mis en pause)
+    const unsubscribeResume = onSmartAudioResume(() => {
       if (userWantsPlayRef.current && audioRef.current) {
         setIsSmartPaused(false);
         setActiveMediaSource(null);
-        audioRef.current.volume = 0;
+        audioRef.current.volume = defaultVolume;
         audioRef.current
           .play()
           .then(() => {
             setIsPlaying(true);
-            if (audioRef.current) {
-              fadeVolume(audioRef.current, 0.25, 1000);
-            }
           })
-          .catch(() => {
-            // Autoplay restriction si l'utilisateur n'a pas encore interagi
+          .catch((err) => {
+            console.warn("Reprise automatique bloquée par le navigateur :", err);
           });
       }
     });
 
-    const cleanupResume = unsubscribeResume();
-
     return () => {
-      if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
-      }
       unsubscribePause();
-      cleanupResume();
+      unsubscribeResume();
     };
-  }, [enabled, finalAudioUrl, defaultVolume]);
+  }, [enabled, defaultVolume]);
 
-  // Fonction utilitaire de fondu audio (Fade In / Fade Out)
-  const fadeVolume = (
-    audio: HTMLAudioElement,
-    targetVolume: number,
-    durationMs: number,
-    onComplete?: () => void
-  ) => {
-    if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
-
-    const stepMs = 25;
-    const steps = Math.max(1, durationMs / stepMs);
-    const startVolume = audio.volume;
-    const delta = (targetVolume - startVolume) / steps;
-    let currentStep = 0;
-
-    fadeIntervalRef.current = setInterval(() => {
-      currentStep++;
-      const nextVolume = Math.min(1, Math.max(0, startVolume + delta * currentStep));
-      audio.volume = nextVolume;
-      setVolume(nextVolume);
-
-      if (currentStep >= steps) {
-        if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
-        audio.volume = targetVolume;
-        setVolume(targetVolume);
-        if (onComplete) onComplete();
-      }
-    }, stepMs);
-  };
-
+  // Bascule Play / Pause directe
   const toggleAmbientSound = () => {
-    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
     if (isPlaying) {
       userWantsPlayRef.current = false;
       setIsSmartPaused(false);
-      fadeVolume(audioRef.current, 0, 300, () => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          setIsPlaying(false);
-        }
-      });
+      audio.pause();
+      setIsPlaying(false);
     } else {
       userWantsPlayRef.current = true;
       setIsSmartPaused(false);
-      audioRef.current.volume = 0;
-      audioRef.current
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-          if (audioRef.current) {
-            fadeVolume(audioRef.current, 0.25, 600);
-          }
-        })
-        .catch((err) => {
-          console.warn("Lecture bloquée par le navigateur :", err);
-        });
+      audio.volume = defaultVolume;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((err) => {
+            console.warn("Lecture audio bloquée par la politique d'autoplay :", err);
+            setIsPlaying(false);
+          });
+      }
     }
   };
 
@@ -153,16 +103,31 @@ export default function BackgroundAudio({
 
   return (
     <div className="fixed bottom-5 right-5 z-40">
-      <div
-        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-full border shadow-2xl backdrop-blur-md transition-all duration-300 ${
+      {/* Balise audio HTML5 persistante connectée aux settings Neon */}
+      <audio
+        ref={audioRef}
+        src={finalAudioUrl}
+        loop
+        preload="auto"
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+      />
+
+      <button
+        type="button"
+        onClick={toggleAmbientSound}
+        id="toggle-ambient-audio-btn"
+        title={isPlaying ? "Couper l'ambiance sonore" : "Activer l'ambiance sonore"}
+        aria-label={isPlaying ? "Couper l'ambiance sonore" : "Activer l'ambiance sonore"}
+        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-full border shadow-2xl backdrop-blur-md transition-all duration-300 text-left cursor-pointer group active:scale-95 select-none ${
           isPlaying
-            ? "bg-neutral-900/90 border-brand-accent/60 text-white shadow-brand-accent/20"
+            ? "bg-neutral-900/95 border-brand-accent/60 text-white shadow-brand-accent/25 ring-1 ring-brand-accent/30"
             : isSmartPaused
-            ? "bg-amber-950/80 border-amber-500/40 text-amber-200"
-            : "bg-neutral-900/70 border-neutral-800 text-neutral-400 hover:text-white"
+            ? "bg-amber-950/85 border-amber-500/40 text-amber-200"
+            : "bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 hover:bg-neutral-900/95"
         }`}
       >
-        {/* Visualiseur de spectre sonore dynamique */}
+        {/* Indicateur visuel d'état : Égaliseur dynamique ou icône radio */}
         {isPlaying ? (
           <div className="flex items-end gap-1 h-3.5 px-0.5" aria-hidden="true">
             <span className="w-1 bg-brand-accent rounded-full animate-[bounce_0.8s_infinite] h-3" />
@@ -173,12 +138,13 @@ export default function BackgroundAudio({
         ) : isSmartPaused ? (
           <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
         ) : (
-          <Radio className="w-4 h-4 shrink-0 text-neutral-500" />
+          <Radio className="w-4 h-4 shrink-0 text-neutral-500 group-hover:text-neutral-300 transition-colors" />
         )}
 
-        <div className="flex flex-col text-left pr-1 select-none">
+        {/* Textes d'état informatifs */}
+        <div className="flex flex-col pr-1">
           <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide leading-tight">
-            <span>Ambiance Sonore</span>
+            <span>{isPlaying ? "Ambiance active" : isSmartPaused ? "Ambiance en pause" : "Ambiance coupée"}</span>
             {isSmartPaused && (
               <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 Pause Auto
@@ -190,22 +156,18 @@ export default function BackgroundAudio({
               ? `Média en cours (${activeMediaSource})`
               : isPlaying
               ? title
-              : "Cliquer pour activer"}
+              : "Cliquer pour écouter"}
           </span>
         </div>
 
-        {/* Bouton de contrôle */}
-        <button
-          type="button"
-          onClick={toggleAmbientSound}
-          id="toggle-ambient-audio-btn"
-          title={isPlaying ? "Couper l'ambiance sonore" : "Activer l'ambiance sonore"}
-          className={`p-2 rounded-full transition-all active:scale-90 ${
+        {/* Bouton icône état sonore */}
+        <div
+          className={`p-2 rounded-full transition-all shrink-0 ${
             isPlaying
-              ? "bg-brand-accent text-white hover:bg-brand-accentLight shadow-md"
+              ? "bg-brand-accent text-white shadow-md shadow-brand-accent/40"
               : isSmartPaused
-              ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
-              : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white"
+              ? "bg-amber-500/20 text-amber-300"
+              : "bg-neutral-800 text-neutral-400 group-hover:bg-neutral-700 group-hover:text-white"
           }`}
         >
           {isPlaying ? (
@@ -213,8 +175,8 @@ export default function BackgroundAudio({
           ) : (
             <VolumeX className="w-3.5 h-3.5" />
           )}
-        </button>
-      </div>
+        </div>
+      </button>
     </div>
   );
 }

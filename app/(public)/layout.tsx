@@ -109,7 +109,7 @@ export default async function PublicLayout({
         enabled={vitrineSettings.showAudioBackground}
         audioUrl={vitrineSettings.audioBackgroundUrl}
         title={vitrineSettings.audioBackgroundTitle}
-        defaultVolume={0.20}
+        defaultVolume={0.25}
       />
 
       {/* Footer minimaliste et premium */}
