@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { updateWebsiteContent, WebsiteContentData } from "@/lib/website-content";
 import { updateVitrineSettings, VitrineSettingsData } from "@/lib/vitrine-settings";
-import { put } from "@vercel/blob";
+import { put, getDownloadUrl } from "@vercel/blob";
 
 export interface WebsiteContentActionResult {
   success?: boolean;
@@ -39,9 +39,9 @@ export async function updateWebsiteContentAction(
       try {
         const cleanName = heroPhotoFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
         const blob = await put(`portraits/${Date.now()}-${cleanName}`, heroPhotoFile, {
-          access: "public",
+          access: "private",
         });
-        heroPhotoUrl = blob.url;
+        heroPhotoUrl = getDownloadUrl(blob.url) || blob.downloadUrl || blob.url;
       } catch (uploadErr) {
         console.warn("Erreur upload Vercel Blob image portrait :", uploadErr);
       }
@@ -74,9 +74,9 @@ export async function updateWebsiteContentAction(
       try {
         const cleanName = teaserAudioFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
         const blob = await put(`teaser/${Date.now()}-${cleanName}`, teaserAudioFile, {
-          access: "public",
+          access: "private",
         });
-        teaserAudioUrl = blob.url;
+        teaserAudioUrl = getDownloadUrl(blob.url) || blob.downloadUrl || blob.url;
       } catch (uploadErr) {
         console.warn("Erreur upload Vercel Blob teaser :", uploadErr);
       }
@@ -100,9 +100,9 @@ export async function updateWebsiteContentAction(
       try {
         const cleanName = audioBackgroundFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
         const blob = await put(`ambiance/${Date.now()}-${cleanName}`, audioBackgroundFile, {
-          access: "public",
+          access: "private",
         });
-        audioBackgroundUrl = blob.url;
+        audioBackgroundUrl = getDownloadUrl(blob.url) || blob.downloadUrl || blob.url;
       } catch (uploadErr) {
         console.warn("Erreur upload Vercel Blob ambiance :", uploadErr);
       }
@@ -130,9 +130,9 @@ export async function updateWebsiteContentAction(
       try {
         const cleanName = donationImageFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
         const blob = await put(`donations/${Date.now()}-${cleanName}`, donationImageFile, {
-          access: "public",
+          access: "private",
         });
-        donationImageUrl = blob.url;
+        donationImageUrl = getDownloadUrl(blob.url) || blob.downloadUrl || blob.url;
       } catch (uploadErr) {
         console.warn("Erreur upload Vercel Blob don :", uploadErr);
       }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { put } from "@vercel/blob";
+import { put, getDownloadUrl } from "@vercel/blob";
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
@@ -15,11 +15,14 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const blob = await put(`ambiance/${Date.now()}-${cleanName}`, file, {
-      access: "public",
+      access: "private",
     });
 
+    const fileUrl = getDownloadUrl(blob.url) || blob.downloadUrl || blob.url;
+
     return NextResponse.json({
-      url: blob.url,
+      url: fileUrl,
+      downloadUrl: blob.downloadUrl || fileUrl,
       name: file.name,
       size: file.size,
       type: file.type,
