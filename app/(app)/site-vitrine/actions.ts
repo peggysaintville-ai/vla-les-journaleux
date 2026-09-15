@@ -120,8 +120,13 @@ export async function updateWebsiteContentAction(
     const donationEnabled = formData.get("donationEnabled") === "on" || formData.get("donationEnabled") === "true";
     const donationTitle = (formData.get("donationTitle") as string)?.trim() || "Soutenir notre journalisme indépendant";
     const donationSubtitle = (formData.get("donationSubtitle") as string)?.trim() || "Aidez-nous à financer nos enquêtes et nos podcasts de terrain en toute liberté.";
-    const donationDescription = (formData.get("donationDescription") as string)?.trim() || "";
-    const donationUrl = (formData.get("donationUrl") as string)?.trim() || "";
+    
+    const rawDonationDescription = (formData.get("donationDescription") as string)?.trim();
+    const donationDescription = rawDonationDescription && rawDonationDescription.length > 0
+      ? rawDonationDescription
+      : "Chaque enquête approfondie nécessite des semaines de recherche documentaire, de déplacements sur le terrain et de vérification rigoureuse des sources.\n\nEn contribuant financièrement à notre studio, vous garantissez notre totale indépendance vis-à-vis des puissances économiques et politiques. Vos dons financent directement la production d'épisodes en accès libre et la protection de nos informateurs.";
+
+    const donationUrl = (formData.get("donationUrl") as string)?.trim() || "https://donate.stripe.com/demo";
     const donationButtonText = (formData.get("donationButtonText") as string)?.trim() || "Faire un don libre";
     let donationImageUrl = (formData.get("donationImageUrl") as string)?.trim() || null;
     const donationImageFile = formData.get("donationImageFile") as File | null;
@@ -136,6 +141,10 @@ export async function updateWebsiteContentAction(
       } catch (uploadErr) {
         console.warn("Erreur upload Vercel Blob don :", uploadErr);
       }
+    }
+
+    if (!donationImageUrl) {
+      donationImageUrl = "/images/journalist-portrait.jpg";
     }
 
     // Mise à jour de VitrineSettings dans la base Neon

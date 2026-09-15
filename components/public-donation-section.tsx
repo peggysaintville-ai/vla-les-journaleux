@@ -24,13 +24,17 @@ export default function PublicDonationSection({ settings }: PublicDonationSectio
     settings.donationSubtitle ||
     "Aidez-nous à financer nos enquêtes et nos podcasts de terrain en toute liberté.";
   const description =
-    settings.donationDescription ||
-    `Chaque enquête approfondie nécessite des semaines de recherche documentaire, de déplacements sur le terrain et de vérification rigoureuse des sources.
+    settings.donationDescription && settings.donationDescription.trim().length > 0
+      ? settings.donationDescription.trim()
+      : `Chaque enquête approfondie nécessite des semaines de recherche documentaire, de déplacements sur le terrain et de vérification rigoureuse des sources.
 
 En contribuant financièrement à notre studio, vous garantissez notre totale indépendance vis-à-vis des puissances économiques et politiques. Vos dons financent directement la production d'épisodes en accès libre et la protection de nos informateurs.`;
   const buttonText = settings.donationButtonText || "Faire un don libre";
   const donationUrl = settings.donationUrl || "https://donate.stripe.com/demo";
-  const imageUrl = settings.donationImageUrl;
+  const imageUrl =
+    settings.donationImageUrl && settings.donationImageUrl.trim().length > 0
+      ? settings.donationImageUrl.trim()
+      : "/images/journalist-portrait.jpg";
 
   // Découpage du texte de description en paragraphes pour un rendu typographique aéré
   const paragraphs = description
@@ -73,10 +77,10 @@ En contribuant financièrement à notre studio, vous garantissez notre totale in
                 </p>
               </div>
 
-              {/* Paragraphes explicatifs */}
-              <div className="space-y-3 text-xs sm:text-sm text-neutral-400 leading-relaxed">
+              {/* Paragraphes explicatifs stylisés */}
+              <div className="space-y-3 text-xs sm:text-sm text-neutral-300/90 leading-relaxed">
                 {paragraphs.map((para, idx) => (
-                  <p key={idx} className="text-neutral-300/90">
+                  <p key={idx} className="p-3.5 rounded-2xl bg-neutral-950/60 border border-neutral-800/80 text-neutral-200">
                     {para}
                   </p>
                 ))}

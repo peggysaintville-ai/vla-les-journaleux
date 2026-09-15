@@ -114,18 +114,9 @@ export default function BackgroundAudio({
           .then(() => {
             setIsPlaying(true);
           })
-          .catch(() => {
-            // Si la lecture distante est bloquée ou échoue, repli immédiat sur le fallback local
-            if (currentSrc !== DEFAULT_AMBIENT_TRACK_URL) {
-              setCurrentSrc(DEFAULT_AMBIENT_TRACK_URL);
-              setTimeout(() => {
-                if (audioRef.current && userWantsPlayRef.current) {
-                  audioRef.current.play().catch(() => setIsPlaying(false));
-                }
-              }, 100);
-            } else {
-              setIsPlaying(false);
-            }
+          .catch((err) => {
+            console.warn("[BackgroundAudio] Lecture audio différée par le navigateur :", err?.message || err);
+            setIsPlaying(false);
           });
       }
     }
