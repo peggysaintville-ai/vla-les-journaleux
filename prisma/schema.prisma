@@ -357,6 +357,14 @@ model VitrineSettings {
   showContactSection   Boolean  @default(true)
   bioTitle             String?  @default("L'indépendance comme boussole, l'humain comme centre.")
   bioText              String?
+  // Section Soutenir le Média & Faire un Don
+  donationEnabled      Boolean  @default(true)
+  donationTitle        String?  @default("Soutenir notre journalisme indépendant")
+  donationSubtitle     String?  @default("Aidez-nous à financer nos enquêtes et nos podcasts de terrain en toute liberté.")
+  donationDescription  String?  @db.Text
+  donationUrl          String?  @default("https://donate.stripe.com/demo")
+  donationButtonText   String?  @default("Faire un don libre")
+  donationImageUrl     String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }

@@ -197,6 +197,51 @@ export async function updateWebsiteContentAction(
     const showBioSection = formData.get("showBioSection") === "on" || formData.get("showBioSection") === "true";
     const showContactSection = formData.get("showContactSection") === "on" || formData.get("showContactSection") === "true";
 
+    // 5. Section Soutien & Dons
+    const donationEnabled = formData.get("donationEnabled") === "on" || formData.get("donationEnabled") === "true";
+    const donationTitle = (formData.get("donationTitle") as string)?.trim() || "Soutenir notre journalisme indépendant";
+    const donationSubtitle = (formData.get("donationSubtitle") as string)?.trim() || "Aidez-nous à financer nos enquêtes et nos podcasts de terrain en toute liberté.";
+    const donationDescription = (formData.get("donationDescription") as string)?.trim() || "";
+    const donationUrl = (formData.get("donationUrl") as string)?.trim() || "";
+    const donationButtonText = (formData.get("donationButtonText") as string)?.trim() || "Faire un don libre";
+    let donationImageUrl = (formData.get("donationImageUrl") as string)?.trim() || null;
+    const donationImageFile = formData.get("donationImageFile") as File | null;
+
+    if (donationImageFile && donationImageFile.size > 0 && typeof donationImageFile.arrayBuffer === "function") {
+      try {
+        const bytes = await donationImageFile.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const uploadsDir = path.join(process.cwd(), "public", "uploads");
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const cleanName = donationImageFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const fileName = `donation-${Date.now()}-${cleanName}`;
+        fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+        donationImageUrl = `/uploads/${fileName}`;
+      } catch (uploadErr) {
+        console.warn("Erreur sauvegarde upload image don :", uploadErr);
+      }
+    } else if (donationImageUrl && donationImageUrl.startsWith("data:image/")) {
+      try {
+        const matches = donationImageUrl.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+        if (matches) {
+          const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
+          const data = matches[2];
+          const buffer = Buffer.from(data, "base64");
+          const uploadsDir = path.join(process.cwd(), "public", "uploads");
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+          const fileName = `donation-${Date.now()}.${ext}`;
+          fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+          donationImageUrl = `/uploads/${fileName}`;
+        }
+      } catch (diskErr) {
+        console.warn("Stockage direct de la Data URL image don en base Neon :", diskErr);
+      }
+    }
+
     // Mise à jour de VitrineSettings dans la base Neon
     await updateVitrineSettings({
       heroJournalistName,
@@ -223,6 +268,13 @@ export async function updateWebsiteContentAction(
       showContactSection,
       bioTitle,
       bioText: bioText || heroBio,
+      donationEnabled,
+      donationTitle,
+      donationSubtitle,
+      donationDescription,
+      donationUrl,
+      donationButtonText,
+      donationImageUrl,
     });
 
     // Mise à jour rétrocompatible de WebsiteContent

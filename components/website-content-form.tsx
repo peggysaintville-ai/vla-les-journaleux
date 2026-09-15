@@ -27,6 +27,9 @@ import {
   BadgeCheck,
   ZoomIn,
   MoveVertical,
+  Heart,
+  Trash2,
+  Image as ImageIcon,
 } from "lucide-react";
 
 interface WebsiteContentFormProps {
@@ -126,6 +129,102 @@ export default function WebsiteContentForm({
   const [showArticles, setShowArticles] = useState(settings.showArticlesSection);
   const [showBio, setShowBio] = useState(settings.showBioSection);
   const [showContact, setShowContact] = useState(settings.showContactSection);
+
+  // État de la section Soutien & Dons
+  const [donationEnabled, setDonationEnabled] = useState(
+    settings.donationEnabled !== undefined ? settings.donationEnabled : true
+  );
+  const [donationTitle, setDonationTitle] = useState(
+    settings.donationTitle || "Soutenir notre journalisme indépendant"
+  );
+  const [donationSubtitle, setDonationSubtitle] = useState(
+    settings.donationSubtitle || "Aidez-nous à financer nos enquêtes et nos podcasts de terrain en toute liberté."
+  );
+  const [donationDescription, setDonationDescription] = useState(
+    settings.donationDescription || DEFAULT_VITRINE_SETTINGS.donationDescription || ""
+  );
+  const [donationUrl, setDonationUrl] = useState(
+    settings.donationUrl || ""
+  );
+  const [donationButtonText, setDonationButtonText] = useState(
+    settings.donationButtonText || "Faire un don libre"
+  );
+  const [donationImageUrl, setDonationImageUrl] = useState<string>(
+    settings.donationImageUrl || ""
+  );
+  const [donationImagePreview, setDonationImagePreview] = useState<string>(
+    settings.donationImageUrl || ""
+  );
+  const [isProcessingDonationImage, setIsProcessingDonationImage] = useState(false);
+  const [donationImageStatusMessage, setDonationImageStatusMessage] = useState<string | null>(null);
+  const [donationUploadProgress, setDonationUploadProgress] = useState<number | null>(null);
+  const donationFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Traitement et upload direct de l'image de don
+  const handleDonationImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessingDonationImage(true);
+    setDonationUploadProgress(20);
+    setDonationImageStatusMessage(`Téléversement de "${file.name}" en cours...`);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      setDonationUploadProgress(50);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erreur serveur (${res.status})`);
+      }
+
+      const data = await res.json();
+      setDonationImageUrl(data.url);
+      setDonationImagePreview(data.url);
+      setDonationUploadProgress(100);
+      setDonationImageStatusMessage(`Image "${file.name}" téléversée avec succès`);
+    } catch (err: any) {
+      console.error("Erreur upload image don :", err);
+      // Fallback local via FileReader Base64
+      setDonationImageStatusMessage("Optimisation locale de l'image...");
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        const result = readerEvent.target?.result as string;
+        if (result) {
+          setDonationImageUrl(result);
+          setDonationImagePreview(result);
+          setDonationImageStatusMessage(`Image optimisée localement (${file.name})`);
+        }
+        setIsProcessingDonationImage(false);
+        setDonationUploadProgress(null);
+      };
+      reader.onerror = () => {
+        setIsProcessingDonationImage(false);
+        setDonationUploadProgress(null);
+        setDonationImageStatusMessage("Erreur lors de la lecture du fichier image.");
+      };
+      reader.readAsDataURL(file);
+      return;
+    } finally {
+      setIsProcessingDonationImage(false);
+      setTimeout(() => setDonationUploadProgress(null), 3000);
+    }
+  };
+
+  const handleRemoveDonationImage = () => {
+    setDonationImageUrl("");
+    setDonationImagePreview("");
+    setDonationImageStatusMessage(null);
+    if (donationFileInputRef.current) {
+      donationFileInputRef.current.value = "";
+    }
+  };
 
   // Traitement et upload direct du teaser audio via FormData vers /api/upload
   const handleAudioFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -329,6 +428,8 @@ export default function WebsiteContentForm({
       {/* Inputs cachés garantissant la persistance de l'image et du cadrage */}
       <input type="hidden" name="heroPhotoUrl" value={heroPhotoUrl} />
       <input type="hidden" name="heroPhotoPosition" value={heroPhotoPosition} />
+      <input type="hidden" name="donationImageUrl" value={donationImageUrl} />
+      <input type="hidden" name="donationEnabled" value={donationEnabled ? "true" : "false"} />
 
       {/* Toast Feedback Supérieur */}
       {state?.success && (
@@ -716,7 +817,7 @@ export default function WebsiteContentForm({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 pt-2">
           {/* Switch Podcasts & Créations Sonores */}
           <div className="p-4 rounded-2xl bg-neutral-950/60 border border-neutral-800 flex items-center justify-between gap-3">
             <div>
@@ -760,6 +861,28 @@ export default function WebsiteContentForm({
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 transition-colors"></div>
+            </label>
+          </div>
+
+          {/* Switch Soutien & Dons */}
+          <div className="p-4 rounded-2xl bg-neutral-950/60 border border-neutral-800 flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                <Heart className="w-3.5 h-3.5 text-rose-400" />
+                <span>Soutien & Dons</span>
+              </div>
+              <span className="text-[10px] text-neutral-400 font-mono">
+                {donationEnabled ? "Visible sur vitrine" : "Masquée"}
+              </span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={donationEnabled}
+                onChange={(e) => setDonationEnabled(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500 transition-colors"></div>
             </label>
           </div>
 
@@ -1225,7 +1348,264 @@ export default function WebsiteContentForm({
             </div>
           </div>
 
-          {/* 6. CARTE MANIFESTE & BIO ÉDITORIALE */}
+          {/* 6. CARTE SOUTIEN & DONS (FINANCEMENT PARTICIPATIF) */}
+          <div className="bg-neutral-900/70 border border-neutral-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-neutral-800/80 gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                  <Heart className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                    <span>Section Soutien & Dons (Financement Participatif)</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                      Presse Libre
+                    </span>
+                  </h3>
+                  <p className="text-xs text-neutral-400">
+                    Proposez à vos lecteurs et auditeurs de soutenir financièrement vos enquêtes et productions sonores.
+                  </p>
+                </div>
+              </div>
+
+              {/* Toggle Switch */}
+              <label className="flex items-center gap-2 cursor-pointer bg-neutral-950 px-3 py-1.5 rounded-xl border border-neutral-800 hover:border-rose-500/40 transition w-fit">
+                <input
+                  type="checkbox"
+                  checked={donationEnabled}
+                  onChange={(e) => setDonationEnabled(e.target.checked)}
+                  className="w-4 h-4 rounded border-neutral-700 text-rose-500 focus:ring-rose-500 bg-neutral-900 cursor-pointer"
+                />
+                <span className="text-xs font-bold text-white">
+                  {donationEnabled ? "Activée sur la vitrine" : "Section masquée"}
+                </span>
+              </label>
+            </div>
+
+            <div className="space-y-4">
+              {/* Titre et Sous-titre */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
+                    Titre Principal de la Section *
+                  </label>
+                  <input
+                    type="text"
+                    name="donationTitle"
+                    required
+                    value={donationTitle}
+                    onChange={(e) => setDonationTitle(e.target.value)}
+                    placeholder="Soutenir notre journalisme indépendant"
+                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500 transition font-semibold"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
+                    Sous-titre / Accroche de Plaidoyer *
+                  </label>
+                  <textarea
+                    name="donationSubtitle"
+                    required
+                    rows={2}
+                    value={donationSubtitle}
+                    onChange={(e) => setDonationSubtitle(e.target.value)}
+                    placeholder="Aidez-nous à financer nos enquêtes et nos podcasts de terrain en toute liberté."
+                    className="w-full p-3.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500 transition leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              {/* Texte explicatif complet */}
+              <div>
+                <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
+                  Texte Explicatif Complet (Impact des Dons & Déontologie)
+                </label>
+                <textarea
+                  name="donationDescription"
+                  rows={4}
+                  value={donationDescription}
+                  onChange={(e) => setDonationDescription(e.target.value)}
+                  placeholder="Chaque enquête approfondie nécessite des semaines de recherche documentaire..."
+                  className="w-full p-4 bg-neutral-950 border border-neutral-800 rounded-xl text-xs font-mono text-neutral-200 leading-relaxed placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500 transition"
+                />
+              </div>
+
+              {/* Lien externe et Bouton d'action */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>Lien de Paiement / Don Externe *</span>
+                    {donationUrl && (
+                      <a
+                        href={donationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] text-rose-400 hover:text-rose-300 inline-flex items-center gap-1 font-mono lowercase"
+                      >
+                        <span>Tester le lien</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </label>
+                  <input
+                    type="url"
+                    name="donationUrl"
+                    value={donationUrl}
+                    onChange={(e) => setDonationUrl(e.target.value)}
+                    placeholder="https://donate.stripe.com/... ou https://tipeee.com/..."
+                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500 transition"
+                  />
+                  <p className="text-[11px] text-neutral-400 mt-1">
+                    Stripe, Tipeee, HelloAsso, PayPal, cagnotte Leetchi, etc. S&apos;ouvre dans un nouvel onglet avec rel=&quot;noopener noreferrer&quot;.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
+                    Texte du Bouton d&apos;Action (CTA) *
+                  </label>
+                  <input
+                    type="text"
+                    name="donationButtonText"
+                    required
+                    value={donationButtonText}
+                    onChange={(e) => setDonationButtonText(e.target.value)}
+                    placeholder="Faire un don libre"
+                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500 transition font-bold"
+                  />
+                  <p className="text-[11px] text-neutral-400 mt-1">
+                    ex: &quot;Faire un don libre&quot;, &quot;Soutenir la rédaction&quot;, &quot;Rejoindre les mécènes&quot;.
+                  </p>
+                </div>
+              </div>
+
+              {/* Upload d'image d'illustration avec Prévisualisation et Suppression */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                    <ImageIcon className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Image d&apos;illustration (Optionnelle)</span>
+                  </label>
+                  {donationImageUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveDonationImage}
+                      className="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Supprimer l&apos;image</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Bouton d'upload direct */}
+                  <div>
+                    <input
+                      ref={donationFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleDonationImageSelect}
+                      className="hidden"
+                      id="donationImageFileInput"
+                      disabled={isProcessingDonationImage}
+                    />
+                    <label
+                      htmlFor="donationImageFileInput"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/50 text-rose-200 hover:text-white border border-rose-500/30 text-xs font-bold cursor-pointer transition shadow-md"
+                    >
+                      {isProcessingDonationImage ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+                          <span>Traitement image en cours...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 text-rose-400" />
+                          <span>Uploader une photo (.jpg, .png, .webp)</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+
+                  {/* Saisie URL manuelle */}
+                  <div>
+                    <input
+                      type="text"
+                      value={donationImageUrl.startsWith("data:") ? "" : donationImageUrl}
+                      onChange={(e) => {
+                        setDonationImageUrl(e.target.value);
+                        setDonationImagePreview(e.target.value);
+                      }}
+                      placeholder={donationImageUrl.startsWith("data:") ? "Image encodée prête" : "Ou coller une URL d'image"}
+                      className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500 transition"
+                    />
+                  </div>
+                </div>
+
+                {/* Barre de progression */}
+                {donationUploadProgress !== null && (
+                  <div className="space-y-1.5 p-3 rounded-xl bg-neutral-950/80 border border-rose-500/30">
+                    <div className="flex items-center justify-between text-[11px] text-rose-300 font-mono">
+                      <span>Téléversement de l&apos;image</span>
+                      <span>{donationUploadProgress}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-neutral-900 rounded-full overflow-hidden border border-rose-500/20">
+                      <div
+                        className="h-full bg-gradient-to-r from-rose-500 to-brand-accent transition-all duration-300 ease-out"
+                        style={{ width: `${donationUploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Message d'état */}
+                {donationImageStatusMessage && (
+                  <div className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                    <span className="truncate">{donationImageStatusMessage}</span>
+                  </div>
+                )}
+
+                {/* Prévisualisation de l'image */}
+                {donationImagePreview && (
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-rose-500/20 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-neutral-900 border border-neutral-800 shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={donationImagePreview}
+                          alt="Prévisualisation don"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-white block">
+                          Illustration de la carte de don
+                        </span>
+                        <span className="text-[10px] text-neutral-400 font-mono">
+                          {donationImageUrl.startsWith("data:")
+                            ? "Image intégrée"
+                            : donationImageUrl.substring(0, 35) + "..."}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveDonationImage}
+                      className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold flex items-center gap-1.5 border border-rose-500/20 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Retirer</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 7. CARTE MANIFESTE & BIO ÉDITORIALE */}
           <div className="bg-neutral-900/70 border border-neutral-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
             <div className="flex items-center gap-3 pb-3 border-b border-neutral-800/80">
               <div className="p-2.5 rounded-xl bg-brand-accent/10 text-brand-accent border border-brand-accent/20">

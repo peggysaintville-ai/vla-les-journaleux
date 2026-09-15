@@ -24,6 +24,14 @@ export interface VitrineSettingsData {
   showContactSection: boolean;
   bioTitle?: string | null;
   bioText?: string | null;
+  // Section Soutenir le Média & Faire un Don
+  donationEnabled: boolean;
+  donationTitle?: string | null;
+  donationSubtitle?: string | null;
+  donationDescription?: string | null;
+  donationUrl?: string | null;
+  donationButtonText?: string | null;
+  donationImageUrl?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -62,4 +70,14 @@ Membre de collectifs internationaux de journalistes d'investigation, je mène ch
 Mon travail s'articule autour de l'investigation sociale, des mutations économiques, des bouleversements technologiques et de la géopolitique des ressources. L'audio permet une intimité et une authenticité rares : il restitue l'hésitation, la vérité d'une voix humaine et l'atmosphère brute d'un lieu d'enquête.
 
 Membre de collectifs internationaux de journalistes d'investigation, je mène chaque projet dans le strict respect de la déontologie et de la protection des sources.`,
+  // Section Soutenir le Média & Faire un Don
+  donationEnabled: true,
+  donationTitle: "Soutenir notre journalisme indépendant",
+  donationSubtitle: "Aidez-nous à financer nos enquêtes et nos podcasts de terrain en toute liberté.",
+  donationDescription: `Chaque enquête approfondie nécessite des semaines de recherche documentaire, de déplacements sur le terrain et de vérification rigoureuse des sources.
+
+En contribuant financièrement à notre studio, vous garantissez notre totale indépendance vis-à-vis des puissances économiques et politiques. Vos dons financent directement la production d'épisodes en accès libre et la protection de nos informateurs.`,
+  donationUrl: "https://donate.stripe.com/demo",
+  donationButtonText: "Faire un don libre",
+  donationImageUrl: "/images/journalist-portrait.jpg",
 };

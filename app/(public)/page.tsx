@@ -3,6 +3,7 @@ import Link from "next/link";
 import AudioPlayer from "@/components/audio-player";
 import ContactForm from "@/components/contact-form";
 import PublicTeaserBanner from "@/components/public-teaser-banner";
+import PublicDonationSection from "@/components/public-donation-section";
 import MediaEmbed from "@/components/media-embed";
 import { getArticles } from "@/lib/articles";
 import { getPublicServices } from "@/lib/services";
@@ -516,6 +517,9 @@ export default async function PublicShowcasePage() {
           </div>
         </div>
       </section>
+
+      {/* SECTION SOUTIEN & DONS (FINANCEMENT PARTICIPATIF) */}
+      <PublicDonationSection settings={vitrineSettings} />
 
       {/* 5. FORMULAIRE DE CONTACT & RÉSERVATION (#contact) */}
       {vitrineSettings.showContactSection && (
